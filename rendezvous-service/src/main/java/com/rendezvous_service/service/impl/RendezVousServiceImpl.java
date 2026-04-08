@@ -1,5 +1,6 @@
 package com.rendezvous_service.service.impl;
 
+import com.rendezvous_service.client.PatientServiceClient;
 import com.rendezvous_service.dto.RendezVousRequestDTO;
 import com.rendezvous_service.dto.RendezVousResponseDTO;
 import com.rendezvous_service.entity.RendezVous;
@@ -22,47 +23,65 @@ public class RendezVousServiceImpl implements RendezVousService {
 
     private final RendezVousRepository rendezVousRepository;
     private final RendezVousMapper rendezVousMapper;
+    private final PatientServiceClient patientServiceClient;  // Feign Client لـ Patient Service
 
     @Override
     @Transactional
     public RendezVousResponseDTO createRendezVous(RendezVousRequestDTO request) {
-        // Vérifier disponibilité (optionnel)
+        // التحقق من وجود المريض قبل إنشاء الموعد
+        try {
+            Object patient = patientServiceClient.getPatientById(request.getPatientId());
+            if (patient == null) {
+                throw new RuntimeException("Patient non trouvé avec ID: " + request.getPatientId());
+            }
+            log.info("Patient trouvé: {}", patient);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du patient: {}", e.getMessage());
+            throw new RuntimeException("Impossible de vérifier le patient. Erreur: " + e.getMessage());
+        }
+
         RendezVous rdv = rendezVousMapper.toEntity(request);
         rdv = rendezVousRepository.save(rdv);
-        log.info("Rendez-vous créé avec ID: {}", rdv.getId());
+        log.info("Rendez-vous créé: {}", rdv.getId());
         return rendezVousMapper.toDTO(rdv);
     }
 
     @Override
     public RendezVousResponseDTO getRendezVousById(Integer id) {
         RendezVous rdv = rendezVousRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec ID: " + id));
         return rendezVousMapper.toDTO(rdv);
     }
 
     @Override
     public List<RendezVousResponseDTO> getRendezVousByPatientId(Integer patientId) {
         return rendezVousRepository.findByPatientId(patientId)
-                .stream().map(rendezVousMapper::toDTO).collect(Collectors.toList());
+                .stream()
+                .map(rendezVousMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<RendezVousResponseDTO> getRendezVousByMedecinId(Integer medecinId) {
         return rendezVousRepository.findByMedecinId(medecinId)
-                .stream().map(rendezVousMapper::toDTO).collect(Collectors.toList());
+                .stream()
+                .map(rendezVousMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<RendezVousResponseDTO> getAllRendezVous() {
-        return rendezVousRepository.findAll().stream()
-                .map(rendezVousMapper::toDTO).collect(Collectors.toList());
+        return rendezVousRepository.findAll()
+                .stream()
+                .map(rendezVousMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public RendezVousResponseDTO updateRendezVous(Integer id, RendezVousRequestDTO request) {
         RendezVous existing = rendezVousRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec ID: " + id));
         existing.setPatientId(request.getPatientId());
         existing.setMedecinId(request.getMedecinId());
         existing.setDateTime(request.getDateTime());
@@ -79,7 +98,7 @@ public class RendezVousServiceImpl implements RendezVousService {
     @Transactional
     public RendezVousResponseDTO updateStatus(Integer id, String status) {
         RendezVous existing = rendezVousRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec ID: " + id));
         existing.setStatus(RendezVous.Status.valueOf(status));
         existing.setUpdatedAt(LocalDateTime.now());
         return rendezVousMapper.toDTO(rendezVousRepository.save(existing));
@@ -88,6 +107,9 @@ public class RendezVousServiceImpl implements RendezVousService {
     @Override
     @Transactional
     public void deleteRendezVous(Integer id) {
+        if (!rendezVousRepository.existsById(id)) {
+            throw new RuntimeException("Rendez-vous non trouvé avec ID: " + id);
+        }
         rendezVousRepository.deleteById(id);
         log.info("Rendez-vous supprimé: {}", id);
     }
