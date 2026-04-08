@@ -1,4 +1,4 @@
-package com.rendezvous_service.config;
+package com.facturation_service.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
