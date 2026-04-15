@@ -23,6 +23,7 @@
     </properties>
 
     <dependencies>
+        <!-- dependencies الحالية (احتفظي بها كما هي) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -78,10 +79,13 @@
             <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
+      
+
+        <!-- Eureka Client (بدون version، غادي تاخدها من الـ BOM) -->
         <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.2.0</version>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            
         </dependency>
     </dependencies>
 
@@ -94,12 +98,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <version>1.18.30</version>
-    <optional>true</optional>
-</dependency>
         </dependencies>
     </dependencyManagement>
 
