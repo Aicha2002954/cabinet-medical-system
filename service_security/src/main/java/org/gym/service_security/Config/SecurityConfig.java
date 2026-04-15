@@ -91,7 +91,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 // Activation de CORS dans Spring Security
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+               // .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .csrf(csrf -> csrf.disable())
 

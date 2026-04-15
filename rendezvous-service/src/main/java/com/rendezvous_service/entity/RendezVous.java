@@ -32,7 +32,6 @@ public class RendezVous {
     private String notes;
 
     private LocalDateTime createdAt = LocalDateTime.now();
-
     private LocalDateTime updatedAt;
 
     public enum Status {

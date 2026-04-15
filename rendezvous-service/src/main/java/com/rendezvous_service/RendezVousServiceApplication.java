@@ -10,6 +10,7 @@ import com.rendezvous_service.config.RsaKeys;
 
 @SpringBootApplication
 @EnableFeignClients
+
 @EnableConfigurationProperties(RsaKeys.class)
 public class RendezVousServiceApplication {
     public static void main(String[] args) {

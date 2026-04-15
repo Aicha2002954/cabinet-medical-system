@@ -32,7 +32,7 @@ public class RendezVousMapper {
         dto.setMedecinId(entity.getMedecinId());
         dto.setDateTime(entity.getDateTime());
         dto.setReason(entity.getReason());
-        dto.setStatus(entity.getStatus().name());
+        dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
         dto.setNotes(entity.getNotes());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
