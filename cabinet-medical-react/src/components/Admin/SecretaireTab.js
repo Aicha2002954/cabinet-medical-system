@@ -20,8 +20,7 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
 
     const API_URL = "http://localhost:8087/api/profiles";
     const getAuthHeader = () => ({
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${localStorage.getItem("token")}`
     });
 
     const fetchSecretaires = async () => {
@@ -73,10 +72,11 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
         setShowModal(true);
     };
     const closeModal = () => setShowModal(false);
+
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!isEditing && formData.password !== formData.confirmPassword) {
-            alert("Mots de passe différents");
+        if (!isEditing && (!formData.password || formData.password !== formData.confirmPassword)) {
+            alert("Mots de passe différents ou manquant");
             return;
         }
         setLoading(true);
@@ -86,30 +86,42 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
                     alert("ID du secrétaire manquant");
                     return;
                 }
-                const { userId, password, confirmPassword, ...payload } = formData;
-                Object.keys(payload).forEach(key => {
-                    if (payload[key] === "") delete payload[key];
+                const payload = new FormData();
+                payload.append("firstName", formData.firstName || "");
+                payload.append("lastName", formData.lastName || "");
+                payload.append("phone", formData.phone || "");
+                payload.append("cni", formData.cni || "");
+                payload.append("address", formData.address || "");
+                payload.append("email", formData.email || "");
+                await axios.put(`${API_URL}/${formData.userId}`, payload, {
+                    headers: getAuthHeader()
                 });
-                await axios.put(`${API_URL}/${userId}`, payload, { headers: getAuthHeader() });
                 alert("Secrétaire modifié ✅");
             } else {
                 const { userId, confirmPassword, ...payload } = formData;
                 payload.role = "SECRETAIRE";
+                if (!payload.password) {
+                    alert("Mot de passe requis");
+                    return;
+                }
                 Object.keys(payload).forEach(key => {
                     if (payload[key] === "") delete payload[key];
                 });
-                await axios.post(API_URL, payload, { headers: getAuthHeader() });
+                await axios.post(API_URL, payload, {
+                    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
+                });
                 alert("Secrétaire ajouté ✅");
             }
             closeModal();
             fetchSecretaires();
         } catch (err) {
             console.error(err);
-            alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
+            alert("Erreur: " + (err.response?.data?.message || "Vérifiez la console"));
         } finally {
             setLoading(false);
         }
     };
+
     const handleDelete = async (userId) => {
         if (!userId) {
             alert("ID invalide");

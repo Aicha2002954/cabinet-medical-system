@@ -10,7 +10,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", zone: "", address: "", password: "", confirmPassword: ""
+        userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", address: "", password: "", confirmPassword: ""
     });
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -18,10 +18,10 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
     const itemsPerPage = 8;
     const [stats, setStats] = useState({ total: 0, newThisMonth: 0 });
 
+    // Gateway route (ou direct, selon ton cas – ici on utilise Gateway avec CORS géré)
     const API_URL = "http://localhost:8087/api/profiles";
     const getAuthHeader = () => ({
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${localStorage.getItem("token")}`
     });
 
     const fetchMedecins = async () => {
@@ -62,22 +62,22 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                 email: medecin.email || "",
                 phone: medecin.phone || "",
                 cni: medecin.cni || "",
-                zone: medecin.zone || "",
                 address: medecin.address || "",
                 password: "",
                 confirmPassword: ""
             });
         } else {
             setIsEditing(false);
-            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", zone: "", address: "", password: "", confirmPassword: "" });
+            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", address: "", password: "", confirmPassword: "" });
         }
         setShowModal(true);
     };
     const closeModal = () => setShowModal(false);
+
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!isEditing && formData.password !== formData.confirmPassword) {
-            alert("Mots de passe différents");
+        if (!isEditing && (!formData.password || formData.password !== formData.confirmPassword)) {
+            alert("Mots de passe différents ou manquant");
             return;
         }
         setLoading(true);
@@ -87,30 +87,45 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                     alert("ID du médecin manquant");
                     return;
                 }
-                const { userId, password, confirmPassword, ...payload } = formData;
-                Object.keys(payload).forEach(key => {
-                    if (payload[key] === "") delete payload[key];
+                // Pour la modification : utiliser FormData (multipart/form-data) comme attendu par le backend
+                const payload = new FormData();
+                payload.append("firstName", formData.firstName || "");
+                payload.append("lastName", formData.lastName || "");
+                payload.append("phone", formData.phone || "");
+                payload.append("cni", formData.cni || "");
+                payload.append("address", formData.address || "");
+                payload.append("email", formData.email || "");
+                // N'envoyez pas le mot de passe en modification (non requis)
+                await axios.put(`${API_URL}/${formData.userId}`, payload, {
+                    headers: getAuthHeader()
                 });
-                await axios.put(`${API_URL}/${userId}`, payload, { headers: getAuthHeader() });
                 alert("Médecin modifié ✅");
             } else {
+                // Ajout : envoyer en JSON
                 const { userId, confirmPassword, ...payload } = formData;
                 payload.role = "MEDECIN";
+                if (!payload.password) {
+                    alert("Mot de passe requis");
+                    return;
+                }
                 Object.keys(payload).forEach(key => {
                     if (payload[key] === "") delete payload[key];
                 });
-                await axios.post(API_URL, payload, { headers: getAuthHeader() });
+                await axios.post(API_URL, payload, {
+                    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
+                });
                 alert("Médecin ajouté ✅");
             }
             closeModal();
             fetchMedecins();
         } catch (err) {
             console.error(err);
-            alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
+            alert("Erreur: " + (err.response?.data?.message || "Vérifiez la console"));
         } finally {
             setLoading(false);
         }
     };
+
     const handleDelete = async (userId) => {
         if (!userId) {
             alert("ID invalide");
@@ -125,7 +140,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
             }
         }
     };
-    const showDetails = (m) => alert(`Détails:\nNom: ${m.firstName} ${m.lastName}\nEmail: ${m.email}\nTél: ${m.phone}\nCNI: ${m.cni || "—"}\nAdresse: ${m.address || "—"}\nZone: ${m.zone || "—"}`);
+    const showDetails = (m) => alert(`Détails:\nNom: ${m.firstName} ${m.lastName}\nEmail: ${m.email}\nTél: ${m.phone}\nCNI: ${m.cni || "—"}\nAdresse: ${m.address || "—"}`);
 
     const exportToExcel = () => {
         const data = filteredMedecins.map(m => ({

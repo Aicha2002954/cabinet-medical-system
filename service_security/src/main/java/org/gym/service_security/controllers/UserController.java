@@ -30,6 +30,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -294,4 +295,5 @@ public class UserController {
         UserResponseDTO response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);
     }
+
 }
