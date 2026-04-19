@@ -20,9 +20,6 @@ public class UserProfile {
     // في UserProfile.java
     private String profileImageUrl;
 
-
-
-
     @Enumerated(EnumType.STRING)
     private RoleType role;
 }

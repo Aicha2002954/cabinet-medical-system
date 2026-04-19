@@ -85,7 +85,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         eventData.put("password", request.getPassword()); // الباسورد اللي غيوصل للـ Client
         eventData.put("firstName", request.getFirstName());
 
-        userEventProducer.sendUserCreatedEvent(eventData);
+       // userEventProducer.sendUserCreatedEvent(eventData);
         return mapper.toDTO(savedProfile);
     }
 

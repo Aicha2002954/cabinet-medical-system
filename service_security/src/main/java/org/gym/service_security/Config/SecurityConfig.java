@@ -63,7 +63,7 @@ public class SecurityConfig {
     // Cette configuration permet d'autoriser le Frontend Angular
     // (http://localhost:4200) à communiquer avec le backend Spring Boot.
     // Sans CORS, le navigateur bloque les requêtes pour des raisons de sécurité.
-    @Bean
+ /*    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
@@ -86,7 +86,7 @@ public class SecurityConfig {
 
         return source;
     }
-
+*/
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http

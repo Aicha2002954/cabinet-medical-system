@@ -1,0 +1,259 @@
+/* ============================================
+   RESET & BASE (مثل Login)
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* ===== الحاوية الرئيسية ===== */
+.signup-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #eef2f7 0%, #d4e0e9 100%);
+    position: relative;
+}
+
+/* ===== النافبار (مطابق لـ Login) ===== */
+.navbar {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 0.8rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: #2c7da0;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f5068;
+    letter-spacing: -0.5px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #2c3e50;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover {
+    color: #2c7da0;
+}
+
+.login-nav-btn {
+    background: linear-gradient(135deg, #2c7da0, #1f5068);
+    border: none;
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(44, 125, 160, 0.3);
+}
+
+/* ===== البطاقة المركزية ===== */
+.signup-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+    padding: 2rem;
+}
+
+.signup-card {
+    background: white;
+    border-radius: 32px;
+    box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 650px;   /* أكبر قليلاً لاستيعاب الحقول المزدوجة */
+    padding: 2.5rem 2rem;
+    transition: all 0.3s;
+}
+
+.signup-card h2 {
+    font-size: 2rem;
+    color: #1f5068;
+    margin-bottom: 0.5rem;
+}
+
+.signup-card p {
+    color: #5a6e7a;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+/* ===== الحقول (نفس تصميم Login) ===== */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 60px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    margin-bottom: 1.2rem;
+}
+
+.input-group:focus-within {
+    border-color: #2c7da0;
+    box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.2);
+}
+
+.icon {
+    margin-left: 1.2rem;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.input-group input,
+.input-group select {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    outline: none;
+    font-family: inherit;
+    color: #1f2a36;
+}
+
+.input-group select {
+    cursor: pointer;
+}
+
+.select-group {
+    padding-right: 0.5rem;
+}
+
+.show-btn {
+    background: none;
+    border: none;
+    margin-right: 1rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #5a6e7a;
+}
+
+/* ===== الصفوف المزدوجة (حقلين بجانب بعض) ===== */
+.input-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0;    /* المسافة تُدار بواسطة .input-group نفسها */
+}
+
+.input-row .input-group {
+    flex: 1;
+    margin-bottom: 1.2rem;  /* نحافظ على المسافة السفلية */
+    width: calc(50% - 0.5rem);
+}
+
+/* ===== زر التسجيل ===== */
+.signup-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #2c7da0, #1f5068);
+    border: none;
+    color: white;
+    padding: 0.9rem;
+    border-radius: 60px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 0.5rem;
+}
+
+.signup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(44, 125, 160, 0.3);
+}
+
+/* ===== رابط "Connectez-vous" ===== */
+.login-redirect {
+    text-align: center;
+    margin-top: 1.8rem;
+}
+
+.login-redirect p {
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #4a5b66;
+}
+
+.login-link-btn {
+    background: none;
+    border: none;
+    color: #2c7da0;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+    text-decoration: underline;
+}
+
+.login-link-btn:hover {
+    color: #1f5068;
+}
+
+/* ===== استجابة للشاشات الصغيرة ===== */
+@media (max-width: 650px) {
+    .signup-card {
+        padding: 1.8rem;
+        max-width: 95%;
+    }
+    .input-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .input-row .input-group {
+        width: 100%;
+    }
+}
+
+@media (max-width: 550px) {
+    .nav-links {
+        gap: 1rem;
+    }
+    .login-nav-btn {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    .signup-card h2 {
+        font-size: 1.6rem;
+    }
+}
