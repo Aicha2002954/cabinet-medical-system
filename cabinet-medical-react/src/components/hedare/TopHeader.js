@@ -1,11 +1,15 @@
 import React from "react";
-import { FaBars, FaMoon, FaSun, FaBell, FaUserCircle } from "react-icons/fa";
+import { FaBars, FaMoon, FaSun, FaBell, FaUserCircle, FaUserMd, FaUserSecret, FaChair, FaHistory } from "react-icons/fa";
 
 const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme }) => {
   const getTitle = () => {
     switch(activeTab) {
       case "dashboard": return "Tableau de bord";
       case "patients": return "Gestion des patients";
+      case "medecins": return "Gestion des médecins";
+      case "secretaires": return "Gestion des secrétaires";
+      case "salleAttente": return "Salle d'attente";
+      case "historiqueVisites": return "Historique des visites";
       case "rendezvous": return "Gestion des rendez-vous";
       case "consultations": return "Gestion des consultations";
       case "factures": return "Gestion des factures";

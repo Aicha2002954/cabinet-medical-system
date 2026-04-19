@@ -2,17 +2,22 @@ import React from "react";
 import { 
   FaTachometerAlt, FaUserMd, FaCalendarAlt, 
   FaStethoscope, FaFileInvoice, FaUsers, 
-  FaSignOutAlt, FaHeartbeat 
+  FaSignOutAlt, FaHeartbeat, FaUserSecret, 
+  FaChair, FaHistory 
 } from "react-icons/fa";
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
     { id: "patients", label: "Patients", icon: <FaUserMd /> },
+    { id: "medecins", label: "Médecins", icon: <FaUserMd /> },  // يمكن استخدام أيقونة مختلفة
+    { id: "secretaires", label: "Secrétaires", icon: <FaUserSecret /> },
+    { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
+    { id: "historiqueVisites", label: "Historique visites", icon: <FaHistory /> },
     { id: "rendezvous", label: "Rendez-vous", icon: <FaCalendarAlt /> },
     { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
     { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
-    { id: "Profile", label: "Utilisateurs", icon: <FaUsers /> },
+    { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
   ];
 
   return (
