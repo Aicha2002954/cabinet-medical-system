@@ -39,8 +39,8 @@ const SecretaireDashboard = () => {
   const [showAddInvoiceModal, setShowAddInvoiceModal] = useState(false);
   const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState(null);
-  const [newInvoice, setNewInvoice] = useState({ patientId: "", montant: "", description: "", date: new Date().toISOString().split("T")[0] });
-  const [editInvoiceData, setEditInvoiceData] = useState({ montant: "", paye: false });
+  const [newInvoice, setNewInvoice] = useState({ patientId: "", montant: "", description: "" });
+  const [editInvoiceData, setEditInvoiceData] = useState({ montant: "", statut: "" });
 
   const [searchPatientDoc, setSearchPatientDoc] = useState("");
   const [patientDocs, setPatientDocs] = useState([]);
@@ -91,7 +91,7 @@ const SecretaireDashboard = () => {
         medecinNom: medecinsMap[rdv.medecinId] || `Dr. ${rdv.medecinId}`
       }));
 
-      // Enrichir les factures avec nom du patient
+      // Enrichir les factures (patientNom)
       const enrichedInvoices = invoicesData.map(inv => ({
         ...inv,
         patientNom: patientsMap[inv.patientId] || `Patient ${inv.patientId}`
@@ -119,7 +119,7 @@ const SecretaireDashboard = () => {
   }, []);
 
   // ------------------------------------------------------------------
-  // 2. Gestion des patients
+  // 2. Gestion des patients (CRUD)
   // ------------------------------------------------------------------
   const handleAddPatient = async (e) => {
     e.preventDefault();
@@ -148,37 +148,37 @@ const SecretaireDashboard = () => {
       email: patient.email,
       phone: patient.phone || "",
       address: patient.address || "",
-      city: patient.city || ""
+      city: patient.zone || patient.city || ""
     });
     setShowEditPatientModal(true);
   };
 
   const handleUpdatePatient = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-    const formData = new FormData();
-    formData.append("firstName", editPatientData.firstName);
-    formData.append("lastName", editPatientData.lastName);
-    formData.append("email", editPatientData.email);
-    formData.append("phone", editPatientData.phone);
-    formData.append("address", editPatientData.address);
-    formData.append("zone", editPatientData.city);  // city → zone
-    // لا نرسل كلمة المرور في التعديل
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("firstName", editPatientData.firstName);
+      formData.append("lastName", editPatientData.lastName);
+      formData.append("email", editPatientData.email);
+      formData.append("phone", editPatientData.phone);
+      formData.append("address", editPatientData.address);
+      formData.append("zone", editPatientData.city);
 
-    await axios.put(`${API_BASE}/api/profiles/${currentPatient.userId}`, formData, {
-      headers: getAuthHeader()  // لا تحدد Content-Type، axios سيضع multipart/form-data تلقائياً
-    });
-    alert("Patient modifié ✅");
-    setShowEditPatientModal(false);
-    loadAllData(); // تحديث البيانات
-  } catch (err) {
-    console.error(err);
-    alert("Erreur lors de la modification");
-  } finally {
-    setSubmitting(false);
-  }
-};
+      await axios.put(`${API_BASE}/api/profiles/${currentPatient.userId}`, formData, {
+        headers: getAuthHeader()
+      });
+      alert("Patient modifié ✅");
+      setShowEditPatientModal(false);
+      loadAllData();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la modification");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleDeletePatient = async (userId) => {
     if (window.confirm("Supprimer définitivement ce patient ?")) {
       try {
@@ -228,10 +228,16 @@ const SecretaireDashboard = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.post(`${API_BASE}/api/factures`, newInvoice, { headers: getAuthHeader() });
+      const payload = {
+        patientId: newInvoice.patientId,
+        montant: newInvoice.montant,
+        description: newInvoice.description,
+        statut: "IMPAYEE"
+      };
+      await axios.post(`${API_BASE}/api/factures`, payload, { headers: getAuthHeader() });
       alert("Facture ajoutée ✅");
       setShowAddInvoiceModal(false);
-      setNewInvoice({ patientId: "", montant: "", description: "", date: new Date().toISOString().split("T")[0] });
+      setNewInvoice({ patientId: "", montant: "", description: "" });
       loadAllData();
     } catch (err) {
       alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
@@ -242,7 +248,7 @@ const SecretaireDashboard = () => {
 
   const handleEditInvoice = (invoice) => {
     setCurrentInvoice(invoice);
-    setEditInvoiceData({ montant: invoice.montant, paye: invoice.paye });
+    setEditInvoiceData({ montant: invoice.montant, statut: invoice.statut });
     setShowEditInvoiceModal(true);
   };
 
@@ -272,7 +278,7 @@ const SecretaireDashboard = () => {
   };
 
   // ------------------------------------------------------------------
-  // 5. Salle d'attente
+  // 5. Salle d'attente (localStorage)
   // ------------------------------------------------------------------
   const addToWaitingList = (patientId) => {
     const patient = patients.find(p => p.userId === patientId);
@@ -295,7 +301,7 @@ const SecretaireDashboard = () => {
   };
 
   // ------------------------------------------------------------------
-  // 6. Documents
+  // 6. Documents (simulation)
   // ------------------------------------------------------------------
   const searchDocuments = async () => {
     if (!searchPatientDoc) return;
@@ -352,7 +358,7 @@ const SecretaireDashboard = () => {
   const upcomingAppointments = appointments.filter(a => new Date(a.dateTime) > new Date()).length;
 
   // ------------------------------------------------------------------
-  // 8. Rendu JSX (avec corrections)
+  // 8. Rendu JSX
   // ------------------------------------------------------------------
   return (
     <div className={`admin-dashboard ${darkMode ? "dark" : "light"}`}>
@@ -368,7 +374,7 @@ const SecretaireDashboard = () => {
         />
         <div className="content-wrapper">
 
-          {/* DASHBOARD */}
+          {/* ========== DASHBOARD ========== */}
           {activeTab === "dashboard" && (
             <div className="dashboard-view">
               <div className="stats-grid">
@@ -398,9 +404,7 @@ const SecretaireDashboard = () => {
                           <td><button className="icon-btn delete" onClick={() => removeFromWaitingList(w.id)}><FaTrash /></button></td>
                         </tr>
                       ))}
-                      {waitingList.length === 0 && (
-                        <tr><td colSpan="3" style={{textAlign:"center"}}>Aucun patient en attente</td></tr>
-                      )}
+                      {waitingList.length === 0 && <tr><td colSpan="3">Aucun patient en attente</td></tr>}
                     </tbody>
                   </table>
                 </div>
@@ -416,7 +420,7 @@ const SecretaireDashboard = () => {
                   <table className="data-table">
                     <thead><tr><th>Date & heure</th><th>Patient</th><th>Médecin</th><th>Statut</th><th>Actions</th></tr></thead>
                     <tbody>
-                      {appointments.filter(a => new Date(a.dateTime) > new Date()).slice(0, 8).map(rdv => (
+                      {appointments.filter(a => new Date(a.dateTime) > new Date()).slice(0,8).map(rdv => (
                         <tr key={rdv.id}>
                           <td>{new Date(rdv.dateTime).toLocaleString()}</td>
                           <td>{rdv.patientNom}</td>
@@ -425,9 +429,7 @@ const SecretaireDashboard = () => {
                           <td><button className="icon-btn delete" onClick={() => handleDeleteAppointment(rdv.id)}><FaTrash /></button></td>
                         </tr>
                       ))}
-                      {upcomingAppointments === 0 && (
-                        <tr><td colSpan="5" style={{textAlign:"center"}}>Aucun rendez-vous programmé</td></tr>
-                      )}
+                      {upcomingAppointments === 0 && <tr><td colSpan="5">Aucun rendez-vous programmé</td></tr>}
                     </tbody>
                   </table>
                 </div>
@@ -435,7 +437,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* PATIENTS (sans colonne Ville) */}
+          {/* ========== PATIENTS ========== */}
           {activeTab === "patients" && (
             <div className="recent-section">
               <div className="section-header">
@@ -444,15 +446,7 @@ const SecretaireDashboard = () => {
               </div>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Email</th>
-                      <th>Téléphone</th>
-                      <th>Adresse</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Adresse</th><th>Actions</th></tr></thead>
                   <tbody>
                     {patients.map(p => (
                       <tr key={p.userId}>
@@ -460,7 +454,7 @@ const SecretaireDashboard = () => {
                         <td>{p.email}</td>
                         <td>{p.phone || "—"}</td>
                         <td>{p.address || "—"}</td>
-                        <td>
+                        <td className="action-icons">
                           <button className="icon-btn edit" onClick={() => handleEditPatient(p)}><FaEdit /></button>
                           <button className="icon-btn delete" onClick={() => handleDeletePatient(p.userId)}><FaTrash /></button>
                         </td>
@@ -472,7 +466,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* TOUS LES RENDEZ-VOUS */}
+          {/* ========== TOUS LES RENDEZ-VOUS ========== */}
           {activeTab === "appointments" && (
             <div className="recent-section">
               <div className="section-header">
@@ -481,15 +475,7 @@ const SecretaireDashboard = () => {
               </div>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Date & heure</th>
-                      <th>Patient</th>
-                      <th>Médecin</th>
-                      <th>Statut</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>Date & heure</th><th>Patient</th><th>Médecin</th><th>Statut</th><th>Actions</th></tr></thead>
                   <tbody>
                     {appointments.map(rdv => (
                       <tr key={rdv.id}>
@@ -506,66 +492,49 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* FACTURES (corrigées) */}
+          {/* ========== FACTURES ========== */}
           {activeTab === "invoices" && (
-  <div className="recent-section">
-    <div className="section-header">
-      <h2>💰 Factures</h2>
-      <button className="btn-add" onClick={() => setShowAddInvoiceModal(true)}>
-        <FaPlus /> Nouvelle facture
-      </button>
-    </div>
-    <div className="table-responsive">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Patient</th>
-            <th>Date</th>
-            <th>Montant</th>
-            <th>Payée</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoices.map(inv => {
-            let formattedDate = "Date inconnue";
-            // استخدم inv.invoiceDate (الموحد في loadAllData) أو inv.date
-            const dateValue = inv.invoiceDate || inv.date;
-            if (dateValue) {
-              const dateObj = new Date(dateValue);
-              if (!isNaN(dateObj.getTime())) {
-                formattedDate = dateObj.toLocaleDateString();
-              }
-            }
-            return (
-              <tr key={inv.id}>
-                <td>{inv.patientNom || "Patient"}</td>
-                <td>{formattedDate}</td>
-                <td>{inv.montant} DH</td>
-                <td>{inv.paye ? "✅" : "❌"}</td>
-                <td className="action-icons">
-                  <button className="icon-btn edit" onClick={() => handleEditInvoice(inv)} title="Modifier">
-                    <FaEdit />
-                  </button>
-                  <button className="icon-btn delete" onClick={() => handleDeleteInvoice(inv.id)} title="Supprimer">
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-          {invoices.length === 0 && (
-            <tr>
-              <td colSpan="5" style={{textAlign:"center"}}>Aucune facture enregistrée</td>
-            </tr>
+            <div className="recent-section">
+              <div className="section-header">
+                <h2>💰 Factures</h2>
+                <button className="btn-add" onClick={() => setShowAddInvoiceModal(true)}><FaPlus /> Nouvelle facture</button>
+              </div>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead><tr><th>Patient</th><th>Date</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {invoices.map(inv => {
+                      let formattedDate = "Date inconnue";
+                      if (inv.dateFacture) {
+                        const dateObj = new Date(inv.dateFacture);
+                        if (!isNaN(dateObj.getTime())) formattedDate = dateObj.toLocaleDateString();
+                      }
+                      let statutClass = "badge";
+                      let statutText = inv.statut || "Inconnu";
+                      if (inv.statut === "PAYEE") statutClass = "badge green";
+                      else if (inv.statut === "IMPAYEE") statutClass = "badge red";
+                      else if (inv.statut === "ANNULEE") statutClass = "badge yellow";
+                      return (
+                        <tr key={inv.id}>
+                          <td>{inv.patientNom}</td>
+                          <td>{formattedDate}</td>
+                          <td>{inv.montant} DH</td>
+                          <td><span className={statutClass}>{statutText}</span></td>
+                          <td className="action-icons">
+                            <button className="icon-btn edit" onClick={() => handleEditInvoice(inv)}><FaEdit /></button>
+                            <button className="icon-btn delete" onClick={() => handleDeleteInvoice(inv.id)}><FaTrash /></button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {invoices.length === 0 && <tr><td colSpan="5">Aucune facture enregistrée</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
 
-          {/* DOCUMENTS */}
+          {/* ========== DOCUMENTS ========== */}
           {activeTab === "documents" && (
             <div className="recent-section">
               <h2>📄 Documents patients</h2>
@@ -576,15 +545,14 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* PROFIL */}
+          {/* ========== PROFIL ========== */}
           {activeTab === "profile" && (
             !isEditingProfile ? <UserProfile onEdit={() => setIsEditingProfile(true)} /> : <EditProfile onCancel={() => setIsEditingProfile(false)} onSuccess={() => setIsEditingProfile(false)} />
           )}
         </div>
       </main>
 
-      {/* ========== MODALS (inchangées) ========== */}
-      {/* Modal Ajouter Patient */}
+      {/* ========== MODALS ========== */}
       {showAddPatientModal && (
         <div className="modal-overlay" onClick={() => setShowAddPatientModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -604,7 +572,6 @@ const SecretaireDashboard = () => {
         </div>
       )}
 
-      {/* Modal Modifier Patient */}
       {showEditPatientModal && (
         <div className="modal-overlay" onClick={() => setShowEditPatientModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -624,7 +591,6 @@ const SecretaireDashboard = () => {
         </div>
       )}
 
-      {/* Modal Ajouter Rendez-vous */}
       {showAddAppointmentModal && (
         <div className="modal-overlay" onClick={() => setShowAddAppointmentModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -646,7 +612,6 @@ const SecretaireDashboard = () => {
         </div>
       )}
 
-      {/* Modal Ajouter Facture */}
       {showAddInvoiceModal && (
         <div className="modal-overlay" onClick={() => setShowAddInvoiceModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -658,28 +623,29 @@ const SecretaireDashboard = () => {
               </select>
               <input type="number" placeholder="Montant" required onChange={e => setNewInvoice({...newInvoice, montant: e.target.value})} />
               <input type="text" placeholder="Description" onChange={e => setNewInvoice({...newInvoice, description: e.target.value})} />
-              <input type="date" value={newInvoice.date} onChange={e => setNewInvoice({...newInvoice, date: e.target.value})} />
               <button type="submit" disabled={submitting}>{submitting ? "Ajout..." : "Ajouter"}</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Modifier Facture */}
       {showEditInvoiceModal && (
         <div className="modal-overlay" onClick={() => setShowEditInvoiceModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3>Modifier la facture</h3><button onClick={() => setShowEditInvoiceModal(false)}><FaTimes /></button></div>
             <form onSubmit={e => { e.preventDefault(); handleUpdateInvoice(); }}>
               <input type="number" placeholder="Montant" value={editInvoiceData.montant} onChange={e => setEditInvoiceData({...editInvoiceData, montant:e.target.value})} required />
-              <label><input type="checkbox" checked={editInvoiceData.paye} onChange={e => setEditInvoiceData({...editInvoiceData, paye:e.target.checked})} /> Payée</label>
+              <select value={editInvoiceData.statut} onChange={e => setEditInvoiceData({...editInvoiceData, statut:e.target.value})}>
+                <option value="PAYEE">Payée</option>
+                <option value="IMPAYEE">Impayée</option>
+                <option value="ANNULEE">Annulée</option>
+              </select>
               <button type="submit" disabled={submitting}>{submitting ? "Modification..." : "Modifier"}</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Documents */}
       {showDocsModal && (
         <div className="modal-overlay" onClick={() => setShowDocsModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
