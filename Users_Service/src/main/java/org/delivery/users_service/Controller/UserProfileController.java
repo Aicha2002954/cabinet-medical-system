@@ -7,6 +7,7 @@ import org.delivery.users_service.service.UserProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -52,7 +53,7 @@ public class UserProfileController {
     public ResponseEntity<UserResponseDTO> getDetails(@PathVariable Integer id) {
         return ResponseEntity.ok(profileService.getUserProfile(id));
     }
-
+@PreAuthorize("hasRole('ADMIN') or hasRole('SECRETAIRE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         profileService.deleteProfile(id);

@@ -572,4 +572,11 @@ body {
   .search-premium input { width: 100%; }
   .form-grid { grid-template-columns: 1fr; }
   .user-info { display: none; }
+  .avatar-small-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #2c7da0;
+}
 }

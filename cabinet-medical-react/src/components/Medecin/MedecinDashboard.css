@@ -1,0 +1,56 @@
+/* Ajouts pour les dashboards patient/médecin/secrétaire */
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.badge.green { background: #d1fae5; color: #065f46; }
+.badge.yellow { background: #fef3c7; color: #92400e; }
+.badge.red { background: #fee2e2; color: #991b1b; }
+
+.modal-overlay {
+  position: fixed;
+  top:0;left:0;width:100%;height:100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: var(--bg-main);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.form-grid input {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+.save-changes-btn {
+  background: #2c7da0;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }

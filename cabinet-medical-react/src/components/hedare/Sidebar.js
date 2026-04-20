@@ -3,22 +3,59 @@ import {
   FaTachometerAlt, FaUserMd, FaCalendarAlt, 
   FaStethoscope, FaFileInvoice, FaUsers, 
   FaSignOutAlt, FaHeartbeat, FaUserSecret, 
-  FaChair, FaHistory 
+  FaChair, FaHistory, FaUserCircle 
 } from "react-icons/fa";
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
-  const menuItems = [
-    { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
-    { id: "patients", label: "Patients", icon: <FaUserMd /> },
-    { id: "medecins", label: "Médecins", icon: <FaUserMd /> },  // يمكن استخدام أيقونة مختلفة
-    { id: "secretaires", label: "Secrétaires", icon: <FaUserSecret /> },
-    { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
-    { id: "historiqueVisites", label: "Historique visites", icon: <FaHistory /> },
-    { id: "rendezvous", label: "Rendez-vous", icon: <FaCalendarAlt /> },
-    { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
-    { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
-    { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
-  ];
+const Sidebar = ({ activeTab, setActiveTab, role }) => {
+  // تحديد قائمة العناصر حسب الدور
+  const getMenuItems = () => {
+    switch(role) {
+      case "PATIENT":
+        return [
+          { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "appointments", label: "Mes rendez-vous", icon: <FaCalendarAlt /> },
+          { id: "consultations", label: "Mes consultations", icon: <FaStethoscope /> },
+          { id: "invoices", label: "Mes factures", icon: <FaFileInvoice /> },
+          { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
+        ];
+      case "MEDECIN":
+        return [
+          { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "appointments", label: "Rendez-vous du jour", icon: <FaCalendarAlt /> },
+          { id: "patients", label: "Mes patients", icon: <FaUsers /> },
+          { id: "consultations", label: "Mes consultations", icon: <FaStethoscope /> },
+          { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
+        ];
+      case "SECRETAIRE":
+        return [
+          { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "appointments", label: "Gestion des rendez-vous", icon: <FaCalendarAlt /> },
+          { id: "patients", label: "Patients", icon: <FaUsers /> },
+          { id: "invoices", label: "Factures", icon: <FaFileInvoice /> },
+          { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
+        ];
+      default: // ADMIN – affiche tous les éléments
+        return [
+          { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "patients", label: "Patients", icon: <FaUserMd /> },
+          { id: "medecins", label: "Médecins", icon: <FaUserMd /> },
+          { id: "secretaires", label: "Secrétaires", icon: <FaUserSecret /> },
+          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
+          { id: "historiqueVisites", label: "Historique visites", icon: <FaHistory /> },
+          { id: "rendezvous", label: "Rendez-vous", icon: <FaCalendarAlt /> },
+          { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
+          { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
+          { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
+          { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
+        ];
+    }
+  };
+
+  const menuItems = getMenuItems();
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
   return (
     <aside className="sidebar-modern">
@@ -27,7 +64,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <FaHeartbeat className="logo-icon" />
           <span>MediCare</span>
         </div>
-        <div className="logo-badge"></div>
+        <div className="logo-badge">{role === "ADMIN" ? "Admin" : role}</div>
       </div>
       <nav className="sidebar-nav">
         {menuItems.map(item => (
@@ -43,7 +80,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         ))}
       </nav>
       <div className="sidebar-footer">
-        <div className="nav-item logout">
+        <div className="nav-item logout" onClick={handleLogout}>
           <span className="nav-icon"><FaSignOutAlt /></span>
           <span className="nav-label">Déconnexion</span>
         </div>

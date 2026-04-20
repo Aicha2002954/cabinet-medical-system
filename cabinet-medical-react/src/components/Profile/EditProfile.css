@@ -1,0 +1,169 @@
+/* EditProfile.css - Style pour la modification du profil (sans Sidebar/TopHeader) */
+
+/* ===== SECTION PRINCIPALE ===== */
+.edit-profile-wrapper {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ===== EN-TÊTE ===== */
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.edit-header .btn-back {
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #2c7da0;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 40px;
+  transition: background 0.2s;
+}
+.edit-header .btn-back:hover {
+  background: var(--hover-bg);
+}
+.edit-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* ===== CARTE DU FORMULAIRE ===== */
+.edit-form-card {
+  background: var(--bg-main);
+  border-radius: 2rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+/* ===== AVATAR UPLOAD ===== */
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.avatar-edit-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.avatar-edit-preview {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #2c7da0;
+}
+.camera-icon-label {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #2c7da0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.camera-icon-label:hover {
+  transform: scale(1.05);
+}
+.upload-hint {
+  margin-top: 0.8rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ===== GRILLE DU FORMULAIRE ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.field-group.full-width {
+  grid-column: span 2;
+}
+.field-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.field-group input,
+.field-group select {
+  padding: 0.7rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+.field-group input:focus,
+.field-group select:focus {
+  outline: none;
+  border-color: #2c7da0;
+  box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
+}
+.field-group select {
+  cursor: pointer;
+}
+
+/* ===== BOUTON ENREGISTRER ===== */
+.btn-update-profile {
+  width: 100%;
+  background: linear-gradient(135deg, #2c7da0, #1f5068);
+  border: none;
+  color: white;
+  padding: 0.9rem;
+  border-radius: 50px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-update-profile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(44,125,160,0.3);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .edit-profile-wrapper {
+    padding: 1rem;
+  }
+  .edit-form-card {
+    padding: 1.5rem;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .field-group.full-width {
+    grid-column: span 1;
+  }
+  .edit-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,7 +1,7 @@
 import React from "react";
-import { FaBars, FaMoon, FaSun, FaBell, FaUserCircle, FaUserMd, FaUserSecret, FaChair, FaHistory } from "react-icons/fa";
+import { FaBars, FaMoon, FaSun, FaBell, FaUserCircle } from "react-icons/fa";
 
-const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme }) => {
+const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme, user }) => {
   const getTitle = () => {
     switch(activeTab) {
       case "dashboard": return "Tableau de bord";
@@ -14,9 +14,17 @@ const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme
       case "consultations": return "Gestion des consultations";
       case "factures": return "Gestion des factures";
       case "users": return "Gestion des utilisateurs";
+      case "profile": return "Mon profil";
       default: return "Cabinet Médical";
     }
   };
+
+  // Informations dynamiques de l'utilisateur
+  const userName = user ? `${user.firstName} ${user.lastName}` : "Admin";
+  const userRole = user?.role || "Invité";
+  const avatarUrl = user?.profileImageUrl 
+    ? `http://localhost:8087${user.profileImageUrl}` 
+    : null;
 
   return (
     <header className="top-header-modern">
@@ -35,14 +43,14 @@ const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme
           {darkMode ? <FaSun /> : <FaMoon />}
         </button>
         <div className="user-profile-modern">
-          <img 
-            src="https://randomuser.me/api/portraits/men/32.jpg" 
-            alt="Admin" 
-            className="avatar"
-          />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" className="avatar" />
+          ) : (
+            <FaUserCircle className="avatar-icon" style={{ fontSize: "2rem", color: "var(--text-secondary)" }} />
+          )}
           <div className="user-info">
-            <span className="user-name">Dr. Ahmed</span>
-            <span className="user-role">Administrateur</span>
+            <span className="user-name">{userName}</span>
+            <span className="user-role">{userRole}</span>
           </div>
         </div>
       </div>

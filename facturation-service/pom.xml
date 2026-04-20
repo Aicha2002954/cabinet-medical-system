@@ -23,7 +23,7 @@
     </properties>
 
     <dependencies>
-        <!-- dependencies الحالية (احتفظي بها كما هي) -->
+      
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -81,7 +81,6 @@
         </dependency>
       
 
-        <!-- Eureka Client (بدون version، غادي تاخدها من الـ BOM) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>

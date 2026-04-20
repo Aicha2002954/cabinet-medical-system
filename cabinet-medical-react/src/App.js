@@ -6,6 +6,9 @@ import AdminDashboard from "./components/Admin/AdminDashboard";
 import Dashboard from "./components/Dashboard";
 import UserProfile from "./components/Profile/UserProfile";   // صحيح
 import EditProfile from "./components/Profile/EditProfile";   // صحيح
+  import PatientDashboard from "./components/Patient/PatientDashboard";
+import MedecinDashboard from "./components/Medecin/MedecinDashboard";
+import SecretaireDashboard from "./components/Secretaire/SecretaireDashboard";
 
 function App() {
     const token = localStorage.getItem("token");
@@ -51,6 +54,20 @@ function App() {
                 <Route path="/" element={<Navigate to={getDefaultRoute()} />} />
                 <Route path="/admin" element={role === "ADMIN" ? <AdminDashboard /> : <Navigate to="/login" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+              
+
+<Route 
+  path="/patient" 
+  element={role === "PATIENT" ? <PatientDashboard /> : <Navigate to="/login" />} 
+/>
+<Route 
+  path="/medecin" 
+  element={role === "MEDECIN" ? <MedecinDashboard /> : <Navigate to="/login" />} 
+/>
+<Route 
+  path="/secretaire" 
+  element={role === "SECRETAIRE" ? <SecretaireDashboard /> : <Navigate to="/login" />} 
+/>
             </Routes>
         </BrowserRouter>
     );
