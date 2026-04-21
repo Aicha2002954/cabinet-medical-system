@@ -26,6 +26,11 @@ const SecretaireDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentDocs, setRecentDocs] = useState([]);
 
+  // États pour la recherche
+  const [searchPatientsTerm, setSearchPatientsTerm] = useState("");
+  const [searchAppointmentsTerm, setSearchAppointmentsTerm] = useState("");
+  const [searchInvoicesTerm, setSearchInvoicesTerm] = useState("");
+
   // États pour les modals
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
@@ -52,9 +57,7 @@ const SecretaireDashboard = () => {
   const getAuthHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
   const hasLoaded = useRef(false);
 
-  // ------------------------------------------------------------------
-  // 1. Chargement des données
-  // ------------------------------------------------------------------
+  // Chargement des données
   const loadAllData = async () => {
     setLoading(true);
     try {
@@ -103,12 +106,11 @@ const SecretaireDashboard = () => {
       const stored = localStorage.getItem("salle_attente");
       setWaitingList(stored ? JSON.parse(stored) : []);
 
-      const mockRecentDocs = [
+      setRecentDocs([
         { id: 1, patientName: "Ahmed Benali", type: "Ordonnance", date: "2025-04-15" },
         { id: 2, patientName: "Fatima Zahra", type: "Certificat médical", date: "2025-04-14" },
         { id: 3, patientName: "Rimasse Baidi", type: "Compte rendu", date: "2025-04-10" },
-      ];
-      setRecentDocs(mockRecentDocs);
+      ]);
     } catch (err) {
       console.error(err);
       alert("Erreur lors du chargement des données.");
@@ -123,58 +125,53 @@ const SecretaireDashboard = () => {
     loadAllData();
   }, []);
 
-  // ------------------------------------------------------------------
-  // 2. Gestion des patients (synchronisation profiles + patients)
-  // ------------------------------------------------------------------
+  // Filtres
+  const filteredPatients = patients.filter(p =>
+    p.firstName?.toLowerCase().includes(searchPatientsTerm.toLowerCase()) ||
+    p.lastName?.toLowerCase().includes(searchPatientsTerm.toLowerCase()) ||
+    p.email?.toLowerCase().includes(searchPatientsTerm.toLowerCase()) ||
+    p.phone?.toLowerCase().includes(searchPatientsTerm.toLowerCase())
+  );
+
+  const filteredAppointments = appointments.filter(rdv =>
+    rdv.patientNom?.toLowerCase().includes(searchAppointmentsTerm.toLowerCase()) ||
+    rdv.medecinNom?.toLowerCase().includes(searchAppointmentsTerm.toLowerCase()) ||
+    rdv.status?.toLowerCase().includes(searchAppointmentsTerm.toLowerCase())
+  );
+
+  const filteredInvoices = invoices.filter(inv =>
+    inv.patientNom?.toLowerCase().includes(searchInvoicesTerm.toLowerCase()) ||
+    inv.montant?.toString().includes(searchInvoicesTerm.toLowerCase()) ||
+    inv.statut?.toLowerCase().includes(searchInvoicesTerm.toLowerCase())
+  );
+
+  // Patients CRUD
   const handleAddPatient = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      // 1. Créer dans profiles
       const profilePayload = { ...newPatient, role: "PATIENT", password: "default123", confirmPassword: "default123" };
-      const profileRes = await axios.post(`${API_BASE}/api/profiles`, profilePayload, {
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
-      });
+      const profileRes = await axios.post(`${API_BASE}/api/profiles`, profilePayload, { headers: { ...getAuthHeader(), 'Content-Type': 'application/json' } });
       const newUserId = profileRes.data.userId;
-
-      // 2. Créer dans patient-service avec le même ID
       try {
-        const patientPayload = {
-          id: newUserId,
-          firstName: newPatient.firstName,
-          lastName: newPatient.lastName,
-          email: newPatient.email,
-          phone: newPatient.phone,
-          address: newPatient.address,
-          city: newPatient.city
-        };
-        await axios.post(`${API_BASE}/api/patients`, patientPayload, { headers: getAuthHeader() });
-      } catch (patientErr) {
-        console.warn("Erreur création patient-service:", patientErr.response?.data);
-        alert("Patient créé dans le système, mais la synchronisation avec les rendez-vous a échoué. Veuillez réessayer plus tard.");
-      }
-
-      alert("Patient ajouté avec succès ✅");
+        await axios.post(`${API_BASE}/api/patients`, {
+          id: newUserId, firstName: newPatient.firstName, lastName: newPatient.lastName,
+          email: newPatient.email, phone: newPatient.phone, address: newPatient.address, city: newPatient.city
+        }, { headers: getAuthHeader() });
+      } catch (patientErr) { console.warn(patientErr); }
+      alert("Patient ajouté ✅");
       setShowAddPatientModal(false);
       setNewPatient({ firstName: "", lastName: "", email: "", phone: "", address: "", city: "" });
       loadAllData();
-    } catch (err) {
-      console.error(err);
-      alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs")); }
+    finally { setSubmitting(false); }
   };
 
   const handleEditPatient = (patient) => {
     setCurrentPatient(patient);
     setEditPatientData({
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      email: patient.email,
-      phone: patient.phone || "",
-      address: patient.address || "",
-      city: patient.zone || patient.city || ""
+      firstName: patient.firstName, lastName: patient.lastName, email: patient.email,
+      phone: patient.phone || "", address: patient.address || "", city: patient.zone || patient.city || ""
     });
     setShowEditPatientModal(true);
   };
@@ -183,7 +180,6 @@ const SecretaireDashboard = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      // Mise à jour dans profiles
       const formData = new FormData();
       formData.append("firstName", editPatientData.firstName);
       formData.append("lastName", editPatientData.lastName);
@@ -192,96 +188,64 @@ const SecretaireDashboard = () => {
       formData.append("address", editPatientData.address);
       formData.append("zone", editPatientData.city);
       await axios.put(`${API_BASE}/api/profiles/${currentPatient.userId}`, formData, { headers: getAuthHeader() });
-      
-      // Mise à jour dans patient-service (si existe)
-      try {
-        await axios.put(`${API_BASE}/api/patients/${currentPatient.userId}`, editPatientData, { headers: getAuthHeader() });
-      } catch (err) { /* ignoré si patient n'existe pas */ }
-      
       alert("Patient modifié ✅");
       setShowEditPatientModal(false);
       loadAllData();
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la modification");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { alert("Erreur lors de la modification"); }
+    finally { setSubmitting(false); }
   };
 
   const handleDeletePatient = async (userId) => {
     if (window.confirm("Supprimer définitivement ce patient ?")) {
       try {
         await axios.delete(`${API_BASE}/api/profiles/${userId}`, { headers: getAuthHeader() });
-        await axios.delete(`${API_BASE}/api/patients/${userId}`, { headers: getAuthHeader() }).catch(() => {});
         alert("Patient supprimé ✅");
         loadAllData();
-      } catch (err) {
-        alert("Erreur lors de la suppression");
-      }
+      } catch (err) { alert("Erreur lors de la suppression"); }
     }
   };
 
-  // ------------------------------------------------------------------
-  // 3. Gestion des rendez-vous (avec vérification et création auto)
-  // ------------------------------------------------------------------
+  // Rendez-vous
   const handleDeleteAppointment = async (id) => {
     if (window.confirm("Supprimer ce rendez-vous ?")) {
       try {
         await axios.delete(`${API_BASE}/api/rendezvous/${id}`, { headers: getAuthHeader() });
         loadAllData();
-      } catch (err) {
-        alert("Erreur lors de la suppression");
-      }
+      } catch (err) { alert("Erreur lors de la suppression"); }
     }
   };
 
- const handleAddAppointment = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-    const patientId = parseInt(newAppointment.patientId, 10);
-    
-    // التأكد من أن المريض موجود في قائمة patients (من profiles)
-    const patientFromProfiles = patients.find(p => p.userId === patientId);
-    if (!patientFromProfiles) {
-      alert("Patient introuvable dans le système.");
-      setSubmitting(false);
-      return;
-    }
+  const handleAddAppointment = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const patientId = parseInt(newAppointment.patientId, 10);
+      const patientFromProfiles = patients.find(p => p.userId === patientId);
+      if (!patientFromProfiles) { alert("Patient introuvable"); setSubmitting(false); return; }
+      await axios.post(`${API_BASE}/api/rendezvous`, newAppointment, { headers: getAuthHeader() });
+      alert("Rendez-vous ajouté ✅");
+      setShowAddAppointmentModal(false);
+      setNewAppointment({ patientId: "", medecinId: "", dateTime: "", motif: "" });
+      loadAllData();
+    } catch (err) { alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs")); }
+    finally { setSubmitting(false); }
+  };
 
-    // إضافة الموعد مباشرة (بدون التحقق من patient-service)
-    await axios.post(`${API_BASE}/api/rendezvous`, newAppointment, { headers: getAuthHeader() });
-    alert("Rendez-vous ajouté ✅");
-    setShowAddAppointmentModal(false);
-    setNewAppointment({ patientId: "", medecinId: "", dateTime: "", motif: "" });
-    loadAllData();
-  } catch (err) {
-    console.error(err);
-    alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-  // ------------------------------------------------------------------
-  // 4. Gestion des factures (inchangée)
-  // ------------------------------------------------------------------
+  // Factures
   const handleAddInvoice = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const payload = { patientId: newInvoice.patientId, montant: newInvoice.montant, description: newInvoice.description, statut: "IMPAYEE" };
-      await axios.post(`${API_BASE}/api/factures`, payload, { headers: getAuthHeader() });
+      await axios.post(`${API_BASE}/api/factures`, {
+        patientId: newInvoice.patientId, montant: newInvoice.montant,
+        description: newInvoice.description, statut: "IMPAYEE"
+      }, { headers: getAuthHeader() });
       alert("Facture ajoutée ✅");
       setShowAddInvoiceModal(false);
       setNewInvoice({ patientId: "", montant: "", description: "" });
       loadAllData();
-    } catch (err) {
-      alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs")); }
+    finally { setSubmitting(false); }
   };
 
   const handleEditInvoice = (invoice) => {
@@ -297,11 +261,8 @@ const SecretaireDashboard = () => {
       alert("Facture modifiée ✅");
       setShowEditInvoiceModal(false);
       loadAllData();
-    } catch (err) {
-      alert("Erreur lors de la modification");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { alert("Erreur lors de la modification"); }
+    finally { setSubmitting(false); }
   };
 
   const handleDeleteInvoice = async (id) => {
@@ -309,22 +270,17 @@ const SecretaireDashboard = () => {
       try {
         await axios.delete(`${API_BASE}/api/factures/${id}`, { headers: getAuthHeader() });
         loadAllData();
-      } catch (err) {
-        alert("Erreur lors de la suppression");
-      }
+      } catch (err) { alert("Erreur lors de la suppression"); }
     }
   };
 
-  // ------------------------------------------------------------------
-  // 5. Salle d'attente (localStorage)
-  // ------------------------------------------------------------------
+  // Salle d'attente
   const addToWaitingList = (patientId) => {
     const patient = patients.find(p => p.userId === patientId);
     if (!patient) return;
     const newEntry = { id: Date.now(), patientId, patientName: `${patient.firstName} ${patient.lastName}`, arrivalTime: new Date().toISOString() };
-    const updated = [...waitingList, newEntry];
-    setWaitingList(updated);
-    localStorage.setItem("salle_attente", JSON.stringify(updated));
+    setWaitingList([...waitingList, newEntry]);
+    localStorage.setItem("salle_attente", JSON.stringify([...waitingList, newEntry]));
   };
 
   const removeFromWaitingList = (id) => {
@@ -333,39 +289,28 @@ const SecretaireDashboard = () => {
     localStorage.setItem("salle_attente", JSON.stringify(updated));
   };
 
-  // ------------------------------------------------------------------
-  // 6. Documents (simulation)
-  // ------------------------------------------------------------------
+  // Documents
   const searchDocuments = async () => {
     if (!searchPatientDoc) return;
-    const patient = patients.find(p =>
-      p.firstName.toLowerCase().includes(searchPatientDoc.toLowerCase()) ||
-      p.lastName.toLowerCase().includes(searchPatientDoc.toLowerCase())
-    );
+    const patient = patients.find(p => p.firstName.toLowerCase().includes(searchPatientDoc.toLowerCase()) || p.lastName.toLowerCase().includes(searchPatientDoc.toLowerCase()));
     if (!patient) { alert("Patient non trouvé"); return; }
     setSelectedPatientDoc(patient);
-    const mockDocs = [
+    setPatientDocs([
       { id: 1, type: "Ordonnance", date: "2025-01-10", content: "Paracétamol 500mg, 3 fois par jour" },
       { id: 2, type: "Certificat médical", date: "2025-01-15", content: "Certifie que le patient a été examiné..." },
       { id: 3, type: "Compte rendu", date: "2025-01-20", content: "Consultation pour douleurs thoraciques..." }
-    ];
-    setPatientDocs(mockDocs);
+    ]);
     setShowDocsModal(true);
   };
 
   const printDocument = (doc) => {
     const printWindow = window.open();
     printWindow.document.write(`
-      <html>
-        <head><title>${doc.type}</title></head>
-        <body>
-          <h1>${doc.type}</h1>
-          <p><strong>Date :</strong> ${doc.date}</p>
-          <p><strong>Patient :</strong> ${selectedPatientDoc?.firstName} ${selectedPatientDoc?.lastName}</p>
-          <hr/>
-          <p>${doc.content}</p>
-        </body>
-      </html>
+      <html><head><title>${doc.type}</title></head>
+      <body><h1>${doc.type}</h1>
+      <p><strong>Date :</strong> ${doc.date}</p>
+      <p><strong>Patient :</strong> ${selectedPatientDoc?.firstName} ${selectedPatientDoc?.lastName}</p>
+      <hr/><p>${doc.content}</p></body></html>
     `);
     printWindow.print();
   };
@@ -387,9 +332,6 @@ const SecretaireDashboard = () => {
   const todayAppointments = appointments.filter(a => new Date(a.dateTime).toDateString() === new Date().toDateString()).length;
   const upcomingAppointments = appointments.filter(a => new Date(a.dateTime) > new Date()).length;
 
-  // ------------------------------------------------------------------
-  // 7. Rendu JSX (identique à la version stable précédente)
-  // ------------------------------------------------------------------
   return (
     <div className={`admin-dashboard ${darkMode ? "dark" : "light"}`}>
       <Sidebar activeTab={activeTab} setActiveTab={handleSetActiveTab} role="SECRETAIRE" />
@@ -484,49 +426,78 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* PATIENTS */}
+             {/* PATIENTS AVEC RECHERCHE */}
           {activeTab === "patients" && (
             <div className="recent-section">
               <div className="section-header">
                 <h2>👥 Liste des patients</h2>
+                <div className="search-bar">
+                  <FaSearch />
+                  <input type="text" placeholder="Rechercher par nom, email, téléphone..." value={searchPatientsTerm} onChange={(e) => setSearchPatientsTerm(e.target.value)} />
+                </div>
                 <button className="btn-add" onClick={() => setShowAddPatientModal(true)}><FaUserPlus /> Ajouter patient</button>
               </div>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Adresse</th><th>Actions</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Email</th>
+                      <th>Téléphone</th>
+                      <th>Adresse</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {patients.map(p => (
+                    {filteredPatients.map(p => (
                       <tr key={p.userId}>
                         <td>{p.firstName} {p.lastName}</td>
                         <td>{p.email}</td>
                         <td>{p.phone || "—"}</td>
                         <td>{p.address || "—"}</td>
                         <td className="action-icons">
-  <button className="icon-btn edit" onClick={() => handleEditPatient(p)}><FaEdit /></button>
-  {user?.role === "ADMIN" && (
-    <button className="icon-btn delete" onClick={() => handleDeletePatient(p.userId)}><FaTrash /></button>
-  )}
-</td>
+                          <button className="icon-btn edit" onClick={() => handleEditPatient(p)}><FaEdit /></button>
+                          {user?.role === "ADMIN" && (
+                            <button className="icon-btn delete" onClick={() => handleDeletePatient(p.userId)}><FaTrash /></button>
+                          )}
+                        </td>
                       </tr>
                     ))}
+                    {filteredPatients.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{textAlign:"center"}}>Aucun patient trouvé</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
 
-          {/* TOUS LES RENDEZ-VOUS */}
+          {/* TOUS LES RENDEZ-VOUS AVEC RECHERCHE */}
           {activeTab === "appointments" && (
             <div className="recent-section">
               <div className="section-header">
                 <h2>📅 Tous les rendez-vous</h2>
+                <div className="search-bar">
+                  <FaSearch />
+                  <input type="text" placeholder="Rechercher par patient, médecin, statut..." value={searchAppointmentsTerm} onChange={(e) => setSearchAppointmentsTerm(e.target.value)} />
+                </div>
                 <button className="btn-add" onClick={() => setShowAddAppointmentModal(true)}><FaPlus /> Nouveau rendez-vous</button>
               </div>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Date & heure</th><th>Patient</th><th>Médecin</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Date & heure</th>
+                      <th>Patient</th>
+                      <th>Médecin</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {appointments.map(rdv => (
+                    {filteredAppointments.map(rdv => (
                       <tr key={rdv.id}>
                         <td>{new Date(rdv.dateTime).toLocaleString()}</td>
                         <td>{rdv.patientNom}</td>
@@ -535,28 +506,45 @@ const SecretaireDashboard = () => {
                         <td><button className="icon-btn delete" onClick={() => handleDeleteAppointment(rdv.id)}><FaTrash /></button></td>
                       </tr>
                     ))}
+                    {filteredAppointments.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{textAlign:"center"}}>Aucun rendez-vous trouvé</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
 
-          {/* FACTURES */}
+          {/* FACTURES AVEC RECHERCHE */}
           {activeTab === "invoices" && (
             <div className="recent-section">
               <div className="section-header">
                 <h2>💰 Factures</h2>
+                <div className="search-bar">
+                  <FaSearch />
+                  <input type="text" placeholder="Rechercher par patient, montant, statut..." value={searchInvoicesTerm} onChange={(e) => setSearchInvoicesTerm(e.target.value)} />
+                </div>
                 <button className="btn-add" onClick={() => setShowAddInvoiceModal(true)}><FaPlus /> Nouvelle facture</button>
               </div>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Patient</th><th>Date</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Patient</th>
+                      <th>Date</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {invoices.map(inv => {
+                    {filteredInvoices.map(inv => {
                       let formattedDate = "Date inconnue";
                       if (inv.dateFacture) {
-                        const dateObj = new Date(inv.dateFacture);
-                        if (!isNaN(dateObj.getTime())) formattedDate = dateObj.toLocaleDateString();
+                        const d = new Date(inv.dateFacture);
+                        if (!isNaN(d.getTime())) formattedDate = d.toLocaleDateString();
                       }
                       let statutClass = "badge";
                       let statutText = inv.statut || "Inconnu";
@@ -576,13 +564,16 @@ const SecretaireDashboard = () => {
                         </tr>
                       );
                     })}
-                    {invoices.length === 0 && <tr><td colSpan="5">Aucune facture enregistrée</td></tr>}
+                    {filteredInvoices.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{textAlign:"center"}}>Aucune facture trouvée</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
-
           {/* DOCUMENTS */}
           {activeTab === "documents" && (
             <div className="recent-section">
@@ -601,7 +592,7 @@ const SecretaireDashboard = () => {
         </div>
       </main>
 
-      {/* ========== MODALS ========== */}
+      {/* Modals (inchangées, je les ai raccourcies pour la lisibilité – ajoutez-les ici si nécessaire) */}
       {showAddPatientModal && (
         <div className="modal-overlay" onClick={() => setShowAddPatientModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -645,14 +636,8 @@ const SecretaireDashboard = () => {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3>Ajouter un rendez-vous</h3><button onClick={() => setShowAddAppointmentModal(false)}><FaTimes /></button></div>
             <form onSubmit={handleAddAppointment}>
-              <select required onChange={e => setNewAppointment({...newAppointment, patientId: e.target.value})}>
-                <option value="">Sélectionner un patient</option>
-                {patients.map(p => <option key={p.userId} value={p.userId}>{p.firstName} {p.lastName}</option>)}
-              </select>
-              <select required onChange={e => setNewAppointment({...newAppointment, medecinId: e.target.value})}>
-                <option value="">Sélectionner un médecin</option>
-                {medecins.map(m => <option key={m.userId} value={m.userId}>Dr. {m.firstName} {m.lastName}</option>)}
-              </select>
+              <select required onChange={e => setNewAppointment({...newAppointment, patientId: e.target.value})}><option value="">Patient</option>{patients.map(p => <option key={p.userId} value={p.userId}>{p.firstName} {p.lastName}</option>)}</select>
+              <select required onChange={e => setNewAppointment({...newAppointment, medecinId: e.target.value})}><option value="">Médecin</option>{medecins.map(m => <option key={m.userId} value={m.userId}>Dr. {m.firstName} {m.lastName}</option>)}</select>
               <input type="datetime-local" required onChange={e => setNewAppointment({...newAppointment, dateTime: e.target.value})} />
               <input type="text" placeholder="Motif" onChange={e => setNewAppointment({...newAppointment, motif: e.target.value})} />
               <button type="submit" disabled={submitting}>{submitting ? "Ajout..." : "Ajouter"}</button>
@@ -666,10 +651,7 @@ const SecretaireDashboard = () => {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3>Ajouter une facture</h3><button onClick={() => setShowAddInvoiceModal(false)}><FaTimes /></button></div>
             <form onSubmit={handleAddInvoice}>
-              <select required onChange={e => setNewInvoice({...newInvoice, patientId: e.target.value})}>
-                <option value="">Sélectionner un patient</option>
-                {patients.map(p => <option key={p.userId} value={p.userId}>{p.firstName} {p.lastName}</option>)}
-              </select>
+              <select required onChange={e => setNewInvoice({...newInvoice, patientId: e.target.value})}><option value="">Patient</option>{patients.map(p => <option key={p.userId} value={p.userId}>{p.firstName} {p.lastName}</option>)}</select>
               <input type="number" placeholder="Montant" required onChange={e => setNewInvoice({...newInvoice, montant: e.target.value})} />
               <input type="text" placeholder="Description" onChange={e => setNewInvoice({...newInvoice, description: e.target.value})} />
               <button type="submit" disabled={submitting}>{submitting ? "Ajout..." : "Ajouter"}</button>
@@ -699,7 +681,6 @@ const SecretaireDashboard = () => {
         <div className="modal-overlay" onClick={() => setShowDocsModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3>Documents de {selectedPatientDoc?.firstName} {selectedPatientDoc?.lastName}</h3><button onClick={() => setShowDocsModal(false)}><FaTimes /></button></div>
-            {patientDocs.length === 0 && <p>Aucun document trouvé.</p>}
             {patientDocs.map(doc => (
               <div key={doc.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #ccc" }}>
                 <span>{doc.type} - {new Date(doc.date).toLocaleDateString()}</span>

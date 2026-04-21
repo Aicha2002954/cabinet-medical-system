@@ -53,4 +53,24 @@
   width: 100%;
 }
 .spin { animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+@keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }/* MedecinDashboard.css - hérite des mêmes variables que SecretaireDashboard */
+/* Vous pouvez importer le même CSS ou créer ce fichier avec les styles ci-dessous */
+
+/* Réutilise les mêmes styles que SecretaireDashboard */
+/* Ajoutez ceci si nécessaire */
+
+.form-grid textarea {
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-grid textarea:focus {
+  outline: none;
+  border-color: #2c7da0;
+  box-shadow: 0 0 0 2px rgba(44,125,160,0.2);
+}

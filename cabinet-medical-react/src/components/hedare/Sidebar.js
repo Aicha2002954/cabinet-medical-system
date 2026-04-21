@@ -3,7 +3,8 @@ import {
   FaTachometerAlt, FaUserMd, FaCalendarAlt, 
   FaStethoscope, FaFileInvoice, FaUsers, 
   FaSignOutAlt, FaHeartbeat, FaUserSecret, 
-  FaChair, FaHistory, FaUserCircle 
+  FaChair, FaHistory, FaUserCircle, FaFileAlt,
+  FaPrescription, FaCertificate, FaClipboardList
 } from "react-icons/fa";
 
 const Sidebar = ({ activeTab, setActiveTab, role }) => {
@@ -21,9 +22,10 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
       case "MEDECIN":
         return [
           { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
-          { id: "appointments", label: "Rendez-vous du jour", icon: <FaCalendarAlt /> },
-          { id: "patients", label: "Mes patients", icon: <FaUsers /> },
-          { id: "consultations", label: "Mes consultations", icon: <FaStethoscope /> },
+          { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
+      
+          { id: "documents", label: "Documents médicaux", icon: <FaFileAlt /> },
+          { id: "appointments", label: "Mes rendez-vous", icon: <FaCalendarAlt /> },
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
       case "SECRETAIRE":
@@ -32,6 +34,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "appointments", label: "Gestion des rendez-vous", icon: <FaCalendarAlt /> },
           { id: "patients", label: "Patients", icon: <FaUsers /> },
           { id: "invoices", label: "Factures", icon: <FaFileInvoice /> },
+          { id: "documents", label: "Documents", icon: <FaFileAlt /> },
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
       default: // ADMIN – affiche tous les éléments
@@ -40,12 +43,12 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "patients", label: "Patients", icon: <FaUserMd /> },
           { id: "medecins", label: "Médecins", icon: <FaUserMd /> },
           { id: "secretaires", label: "Secrétaires", icon: <FaUserSecret /> },
-          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
-          { id: "historiqueVisites", label: "Historique visites", icon: <FaHistory /> },
+      
           { id: "rendezvous", label: "Rendez-vous", icon: <FaCalendarAlt /> },
           { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
           { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
           { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
+          { id: "documents", label: "Documents", icon: <FaFileAlt /> },
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
     }
@@ -64,7 +67,9 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           <FaHeartbeat className="logo-icon" />
           <span>MediCare</span>
         </div>
-        <div className="logo-badge">{role === "ADMIN" ? "Admin" : role}</div>
+        <div className="logo-badge">
+          {role === "ADMIN" ? "Admin" : role === "MEDECIN" ? "Médecin" : role === "SECRETAIRE" ? "Secrétaire" : role === "PATIENT" ? "Patient" : role}
+        </div>
       </div>
       <nav className="sidebar-nav">
         {menuItems.map(item => (

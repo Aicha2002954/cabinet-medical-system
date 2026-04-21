@@ -4,24 +4,44 @@ import { FaBars, FaMoon, FaSun, FaBell, FaUserCircle } from "react-icons/fa";
 const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme, user }) => {
   const getTitle = () => {
     switch(activeTab) {
+      // Dashboard
       case "dashboard": return "Tableau de bord";
+      
+      // Gestion (Admin & Secrétaire)
       case "patients": return "Gestion des patients";
       case "medecins": return "Gestion des médecins";
       case "secretaires": return "Gestion des secrétaires";
-      case "salleAttente": return "Salle d'attente";
-      case "historiqueVisites": return "Historique des visites";
       case "rendezvous": return "Gestion des rendez-vous";
       case "consultations": return "Gestion des consultations";
       case "factures": return "Gestion des factures";
       case "users": return "Gestion des utilisateurs";
+      case "documents": return "Documents patients";
+      
+      // Espace Médecin
+      case "salleAttente": return "Salle d'attente";
+  
+      case "consultation": return "Consultation médicale";
+      case "dossierMedical": return "Dossier médical";
+      
+      // Espace Patient
+      case "mesRendezVous": return "Mes rendez-vous";
+      case "mesConsultations": return "Mes consultations";
+      case "mesFactures": return "Mes factures";
+      
+      // Profile
       case "profile": return "Mon profil";
+      
       default: return "Cabinet Médical";
     }
   };
 
   // Informations dynamiques de l'utilisateur
-  const userName = user ? `${user.firstName} ${user.lastName}` : "Admin";
-  const userRole = user?.role || "Invité";
+  const userName = user ? `${user.firstName} ${user.lastName}` : "Utilisateur";
+  const userRole = user?.role === "MEDECIN" ? "Médecin" : 
+                   user?.role === "SECRETAIRE" ? "Secrétaire" : 
+                   user?.role === "PATIENT" ? "Patient" : 
+                   user?.role === "ADMIN" ? "Administrateur" : "Invité";
+  
   const avatarUrl = user?.profileImageUrl 
     ? `http://localhost:8087${user.profileImageUrl}` 
     : null;
