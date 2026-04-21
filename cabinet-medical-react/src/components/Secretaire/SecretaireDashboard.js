@@ -24,6 +24,7 @@ const SecretaireDashboard = () => {
   const [medecins, setMedecins] = useState([]);
   const [waitingList, setWaitingList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recentDocs, setRecentDocs] = useState([]);
 
   // États pour les modals
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
@@ -78,20 +79,17 @@ const SecretaireDashboard = () => {
       const invoicesData = invoicesRes.data;
       const rdvsData = rdvsRes.data;
 
-      // Maps pour les noms
       const patientsMap = {};
       patientsData.forEach(p => { patientsMap[p.userId] = `${p.firstName} ${p.lastName}`; });
       const medecinsMap = {};
       medecinsData.forEach(m => { medecinsMap[m.userId] = `Dr. ${m.firstName} ${m.lastName}`; });
 
-      // Enrichir les rendez-vous
       const enrichedRdvs = rdvsData.map(rdv => ({
         ...rdv,
         patientNom: patientsMap[rdv.patientId] || `Patient ${rdv.patientId}`,
         medecinNom: medecinsMap[rdv.medecinId] || `Dr. ${rdv.medecinId}`
       }));
 
-      // Enrichir les factures (patientNom)
       const enrichedInvoices = invoicesData.map(inv => ({
         ...inv,
         patientNom: patientsMap[inv.patientId] || `Patient ${inv.patientId}`
@@ -104,8 +102,15 @@ const SecretaireDashboard = () => {
 
       const stored = localStorage.getItem("salle_attente");
       setWaitingList(stored ? JSON.parse(stored) : []);
+
+      const mockRecentDocs = [
+        { id: 1, patientName: "Ahmed Benali", type: "Ordonnance", date: "2025-04-15" },
+        { id: 2, patientName: "Fatima Zahra", type: "Certificat médical", date: "2025-04-14" },
+        { id: 3, patientName: "Rimasse Baidi", type: "Compte rendu", date: "2025-04-10" },
+      ];
+      setRecentDocs(mockRecentDocs);
     } catch (err) {
-      console.error("Erreur chargement global:", err);
+      console.error(err);
       alert("Erreur lors du chargement des données.");
     } finally {
       setLoading(false);
@@ -119,21 +124,42 @@ const SecretaireDashboard = () => {
   }, []);
 
   // ------------------------------------------------------------------
-  // 2. Gestion des patients (CRUD)
+  // 2. Gestion des patients (synchronisation profiles + patients)
   // ------------------------------------------------------------------
   const handleAddPatient = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const payload = { ...newPatient, role: "PATIENT", password: "default123", confirmPassword: "default123" };
-      await axios.post(`${API_BASE}/api/profiles`, payload, {
+      // 1. Créer dans profiles
+      const profilePayload = { ...newPatient, role: "PATIENT", password: "default123", confirmPassword: "default123" };
+      const profileRes = await axios.post(`${API_BASE}/api/profiles`, profilePayload, {
         headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
       });
-      alert("Patient ajouté ✅");
+      const newUserId = profileRes.data.userId;
+
+      // 2. Créer dans patient-service avec le même ID
+      try {
+        const patientPayload = {
+          id: newUserId,
+          firstName: newPatient.firstName,
+          lastName: newPatient.lastName,
+          email: newPatient.email,
+          phone: newPatient.phone,
+          address: newPatient.address,
+          city: newPatient.city
+        };
+        await axios.post(`${API_BASE}/api/patients`, patientPayload, { headers: getAuthHeader() });
+      } catch (patientErr) {
+        console.warn("Erreur création patient-service:", patientErr.response?.data);
+        alert("Patient créé dans le système, mais la synchronisation avec les rendez-vous a échoué. Veuillez réessayer plus tard.");
+      }
+
+      alert("Patient ajouté avec succès ✅");
       setShowAddPatientModal(false);
       setNewPatient({ firstName: "", lastName: "", email: "", phone: "", address: "", city: "" });
       loadAllData();
     } catch (err) {
+      console.error(err);
       alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
     } finally {
       setSubmitting(false);
@@ -157,6 +183,7 @@ const SecretaireDashboard = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Mise à jour dans profiles
       const formData = new FormData();
       formData.append("firstName", editPatientData.firstName);
       formData.append("lastName", editPatientData.lastName);
@@ -164,10 +191,13 @@ const SecretaireDashboard = () => {
       formData.append("phone", editPatientData.phone);
       formData.append("address", editPatientData.address);
       formData.append("zone", editPatientData.city);
-
-      await axios.put(`${API_BASE}/api/profiles/${currentPatient.userId}`, formData, {
-        headers: getAuthHeader()
-      });
+      await axios.put(`${API_BASE}/api/profiles/${currentPatient.userId}`, formData, { headers: getAuthHeader() });
+      
+      // Mise à jour dans patient-service (si existe)
+      try {
+        await axios.put(`${API_BASE}/api/patients/${currentPatient.userId}`, editPatientData, { headers: getAuthHeader() });
+      } catch (err) { /* ignoré si patient n'existe pas */ }
+      
       alert("Patient modifié ✅");
       setShowEditPatientModal(false);
       loadAllData();
@@ -183,6 +213,7 @@ const SecretaireDashboard = () => {
     if (window.confirm("Supprimer définitivement ce patient ?")) {
       try {
         await axios.delete(`${API_BASE}/api/profiles/${userId}`, { headers: getAuthHeader() });
+        await axios.delete(`${API_BASE}/api/patients/${userId}`, { headers: getAuthHeader() }).catch(() => {});
         alert("Patient supprimé ✅");
         loadAllData();
       } catch (err) {
@@ -192,7 +223,7 @@ const SecretaireDashboard = () => {
   };
 
   // ------------------------------------------------------------------
-  // 3. Gestion des rendez-vous
+  // 3. Gestion des rendez-vous (avec vérification et création auto)
   // ------------------------------------------------------------------
   const handleDeleteAppointment = async (id) => {
     if (window.confirm("Supprimer ce rendez-vous ?")) {
@@ -205,35 +236,42 @@ const SecretaireDashboard = () => {
     }
   };
 
-  const handleAddAppointment = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await axios.post(`${API_BASE}/api/rendezvous`, newAppointment, { headers: getAuthHeader() });
-      alert("Rendez-vous ajouté ✅");
-      setShowAddAppointmentModal(false);
-      setNewAppointment({ patientId: "", medecinId: "", dateTime: "", motif: "" });
-      loadAllData();
-    } catch (err) {
-      alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
-    } finally {
+ const handleAddAppointment = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  try {
+    const patientId = parseInt(newAppointment.patientId, 10);
+    
+    // التأكد من أن المريض موجود في قائمة patients (من profiles)
+    const patientFromProfiles = patients.find(p => p.userId === patientId);
+    if (!patientFromProfiles) {
+      alert("Patient introuvable dans le système.");
       setSubmitting(false);
+      return;
     }
-  };
+
+    // إضافة الموعد مباشرة (بدون التحقق من patient-service)
+    await axios.post(`${API_BASE}/api/rendezvous`, newAppointment, { headers: getAuthHeader() });
+    alert("Rendez-vous ajouté ✅");
+    setShowAddAppointmentModal(false);
+    setNewAppointment({ patientId: "", medecinId: "", dateTime: "", motif: "" });
+    loadAllData();
+  } catch (err) {
+    console.error(err);
+    alert("Erreur: " + (err.response?.data?.message || "Vérifiez les champs"));
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // ------------------------------------------------------------------
-  // 4. Gestion des factures
+  // 4. Gestion des factures (inchangée)
   // ------------------------------------------------------------------
   const handleAddInvoice = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const payload = {
-        patientId: newInvoice.patientId,
-        montant: newInvoice.montant,
-        description: newInvoice.description,
-        statut: "IMPAYEE"
-      };
+      const payload = { patientId: newInvoice.patientId, montant: newInvoice.montant, description: newInvoice.description, statut: "IMPAYEE" };
       await axios.post(`${API_BASE}/api/factures`, payload, { headers: getAuthHeader() });
       alert("Facture ajoutée ✅");
       setShowAddInvoiceModal(false);
@@ -283,12 +321,7 @@ const SecretaireDashboard = () => {
   const addToWaitingList = (patientId) => {
     const patient = patients.find(p => p.userId === patientId);
     if (!patient) return;
-    const newEntry = {
-      id: Date.now(),
-      patientId,
-      patientName: `${patient.firstName} ${patient.lastName}`,
-      arrivalTime: new Date().toISOString()
-    };
+    const newEntry = { id: Date.now(), patientId, patientName: `${patient.firstName} ${patient.lastName}`, arrivalTime: new Date().toISOString() };
     const updated = [...waitingList, newEntry];
     setWaitingList(updated);
     localStorage.setItem("salle_attente", JSON.stringify(updated));
@@ -337,9 +370,6 @@ const SecretaireDashboard = () => {
     printWindow.print();
   };
 
-  // ------------------------------------------------------------------
-  // 7. Utilitaires
-  // ------------------------------------------------------------------
   const toggleTheme = () => {
     setDarkMode(!darkMode);
     document.body.classList.toggle("dark-mode", !darkMode);
@@ -358,23 +388,16 @@ const SecretaireDashboard = () => {
   const upcomingAppointments = appointments.filter(a => new Date(a.dateTime) > new Date()).length;
 
   // ------------------------------------------------------------------
-  // 8. Rendu JSX
+  // 7. Rendu JSX (identique à la version stable précédente)
   // ------------------------------------------------------------------
   return (
     <div className={`admin-dashboard ${darkMode ? "dark" : "light"}`}>
       <Sidebar activeTab={activeTab} setActiveTab={handleSetActiveTab} role="SECRETAIRE" />
       <main className="main-area">
-        <TopHeader
-          activeTab={activeTab}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          darkMode={darkMode}
-          toggleTheme={toggleTheme}
-          user={user}
-        />
+        <TopHeader activeTab={activeTab} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} darkMode={darkMode} toggleTheme={toggleTheme} user={user} />
         <div className="content-wrapper">
 
-          {/* ========== DASHBOARD ========== */}
+          {/* DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className="dashboard-view">
               <div className="stats-grid">
@@ -434,10 +457,34 @@ const SecretaireDashboard = () => {
                   </table>
                 </div>
               </div>
+
+              {/* Derniers documents */}
+              <div className="recent-section">
+                <div className="section-header">
+                  <h3>📄 Derniers documents</h3>
+                  <button className="btn-link" onClick={() => handleSetActiveTab("documents")}>Voir tous</button>
+                </div>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead><tr><th>Patient</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody>
+                      {recentDocs.map(doc => (
+                        <tr key={doc.id}>
+                          <td>{doc.patientName}</td>
+                          <td>{doc.type}</td>
+                          <td>{new Date(doc.date).toLocaleDateString()}</td>
+                          <td><button className="icon-btn view" onClick={() => alert(`Imprimer ${doc.type} pour ${doc.patientName}`)}><FaPrint /></button></td>
+                        </tr>
+                      ))}
+                      {recentDocs.length === 0 && <tr><td colSpan="4">Aucun document récent</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* ========== PATIENTS ========== */}
+          {/* PATIENTS */}
           {activeTab === "patients" && (
             <div className="recent-section">
               <div className="section-header">
@@ -455,9 +502,11 @@ const SecretaireDashboard = () => {
                         <td>{p.phone || "—"}</td>
                         <td>{p.address || "—"}</td>
                         <td className="action-icons">
-                          <button className="icon-btn edit" onClick={() => handleEditPatient(p)}><FaEdit /></button>
-                          <button className="icon-btn delete" onClick={() => handleDeletePatient(p.userId)}><FaTrash /></button>
-                        </td>
+  <button className="icon-btn edit" onClick={() => handleEditPatient(p)}><FaEdit /></button>
+  {user?.role === "ADMIN" && (
+    <button className="icon-btn delete" onClick={() => handleDeletePatient(p.userId)}><FaTrash /></button>
+  )}
+</td>
                       </tr>
                     ))}
                   </tbody>
@@ -466,7 +515,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* ========== TOUS LES RENDEZ-VOUS ========== */}
+          {/* TOUS LES RENDEZ-VOUS */}
           {activeTab === "appointments" && (
             <div className="recent-section">
               <div className="section-header">
@@ -492,7 +541,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* ========== FACTURES ========== */}
+          {/* FACTURES */}
           {activeTab === "invoices" && (
             <div className="recent-section">
               <div className="section-header">
@@ -534,7 +583,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* ========== DOCUMENTS ========== */}
+          {/* DOCUMENTS */}
           {activeTab === "documents" && (
             <div className="recent-section">
               <h2>📄 Documents patients</h2>
@@ -545,7 +594,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* ========== PROFIL ========== */}
+          {/* PROFIL */}
           {activeTab === "profile" && (
             !isEditingProfile ? <UserProfile onEdit={() => setIsEditingProfile(true)} /> : <EditProfile onCancel={() => setIsEditingProfile(false)} onSuccess={() => setIsEditingProfile(false)} />
           )}

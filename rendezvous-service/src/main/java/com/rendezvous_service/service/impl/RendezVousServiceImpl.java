@@ -23,12 +23,14 @@ public class RendezVousServiceImpl implements RendezVousService {
 
     private final RendezVousRepository rendezVousRepository;
     private final RendezVousMapper rendezVousMapper;
-    private final PatientServiceClient patientServiceClient;  // Feign Client لـ Patient Service
+    private final PatientServiceClient patientServiceClient;  // Feign Client لـ Patient Service (اختياري الآن)
 
     @Override
     @Transactional
     public RendezVousResponseDTO createRendezVous(RendezVousRequestDTO request) {
-        // التحقق من وجود المريض قبل إنشاء الموعد
+        // تعطيل التحقق من وجود المريض في patient-service
+        // لأن المرضى موجودون في خدمة المستخدمين (profiles) وليس في patient-service
+        /*
         try {
             Object patient = patientServiceClient.getPatientById(request.getPatientId());
             if (patient == null) {
@@ -39,10 +41,12 @@ public class RendezVousServiceImpl implements RendezVousService {
             log.error("Erreur lors de la vérification du patient: {}", e.getMessage());
             throw new RuntimeException("Impossible de vérifier le patient. Erreur: " + e.getMessage());
         }
+        */
 
+        // إنشاء الموعد مباشرة بدون التحقق
         RendezVous rdv = rendezVousMapper.toEntity(request);
         rdv = rendezVousRepository.save(rdv);
-        log.info("Rendez-vous créé: {}", rdv.getId());
+        log.info("Rendez-vous créé avec succès, ID: {}", rdv.getId());
         return rendezVousMapper.toDTO(rdv);
     }
 
