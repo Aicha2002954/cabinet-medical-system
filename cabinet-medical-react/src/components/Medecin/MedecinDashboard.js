@@ -307,7 +307,7 @@ const MedecinDashboard = () => {
                 <h3>📅 Rendez-vous du jour</h3>
                 <div className="table-responsive">
                   <table className="data-table">
-                    <thead><tr><th>Heure</th><th>Patient</th><th>Statut</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Heure</th><th>Patient</th><th>Statut</th></tr></thead>
                     <tbody>
                       {appointments.filter(a => {
                         const date = new Date(a.dateTime);
@@ -317,7 +317,7 @@ const MedecinDashboard = () => {
                           <td>{new Date(rdv.dateTime).toLocaleTimeString()}</td>
                           <td>{rdv.patientNom}</td>
                           <td><span className={`badge ${rdv.status === "CONFIRME" ? "green" : "yellow"}`}>{rdv.status}</span></td>
-                          <td><button className="icon-btn" onClick={() => openDocumentModal(rdv)}><FaFileAlt /> Document</button></td>
+                          
                         </tr>
                       ))}
                       {todayAppointmentsCount === 0 && (
@@ -337,7 +337,7 @@ const MedecinDashboard = () => {
               <h2>🚪 Salle d'attente</h2>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Patient</th><th>Date & heure</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Patient</th><th>Date & heure</th></tr></thead>
                   <tbody>
                     {waitingList.map(w => (
                       <tr key={w.id}>
@@ -345,7 +345,7 @@ const MedecinDashboard = () => {
                         <td>{new Date(w.arrivalTime).toLocaleString()}</td>
                         <td>
                           <button className="icon-btn view" onClick={() => validateConsultation(w)}><FaStethoscope /> Consulter</button>
-                          <button className="icon-btn" onClick={() => openDocumentModal(w)}><FaFileAlt /> Document</button>
+                         
                         </td>
                       </tr>
                     ))}
@@ -397,14 +397,14 @@ const MedecinDashboard = () => {
               <h2>📅 Tous mes rendez-vous</h2>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Date & heure</th><th>Patient</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Date & heure</th><th>Patient</th><th>Statut</th></tr></thead>
                   <tbody>
                     {appointments.map(rdv => (
                       <tr key={rdv.id}>
                         <td>{new Date(rdv.dateTime).toLocaleString()}</td>
                         <td>{rdv.patientNom}</td>
                         <td><span className={`badge ${rdv.status === "CONFIRME" ? "green" : "yellow"}`}>{rdv.status}</span></td>
-                        <td><button className="icon-btn" onClick={() => openDocumentModal(rdv)}><FaFileAlt /> Document</button></td>
+                       
                       </tr>
                     ))}
                   </tbody>
