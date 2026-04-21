@@ -34,7 +34,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "appointments", label: "Gestion des rendez-vous", icon: <FaCalendarAlt /> },
           { id: "patients", label: "Patients", icon: <FaUsers /> },
           { id: "invoices", label: "Factures", icon: <FaFileInvoice /> },
-          { id: "documents", label: "Documents", icon: <FaFileAlt /> },
+         
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
       default: // ADMIN – affiche tous les éléments
@@ -64,7 +64,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
     <aside className="sidebar-modern">
       <div className="sidebar-header">
         <div className="logo-modern">
-          <FaHeartbeat className="logo-icon" />
+         <FaStethoscope className="logo-icon" />
           <span>MediCare</span>
         </div>
         <div className="logo-badge">

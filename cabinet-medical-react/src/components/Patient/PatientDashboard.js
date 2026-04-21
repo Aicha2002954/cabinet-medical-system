@@ -6,9 +6,8 @@ import TopHeader from "../hedare/TopHeader";
 import UserProfile from "../Profile/UserProfile";
 import EditProfile from "../Profile/EditProfile";
 import {
-  FaCalendarAlt, FaUsers, FaFileInvoice, FaClock,
-  FaSearch, FaTimes, FaStethoscope, FaUserMd,
-  FaCheckCircle, FaTimesCircle, FaTrash, FaPlus
+  FaCalendarAlt, FaStethoscope, FaFileInvoice, FaClock,
+  FaSearch, FaTimes, FaPlus, FaTimesCircle, FaCheckCircle, FaTrash
 } from "react-icons/fa";
 import "./PatientDashboard.css";
 
@@ -25,7 +24,6 @@ const PatientDashboard = () => {
   const [medecins, setMedecins] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // États pour les modals
   const [showAddAppointmentModal, setShowAddAppointmentModal] = useState(false);
   const [newAppointment, setNewAppointment] = useState({ medecinId: "", dateTime: "", motif: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -43,13 +41,11 @@ const PatientDashboard = () => {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const userEmail = payload.email || payload.sub;
       
-      // 1. جلب المستخدم الحالي (المريض)
       const profilesRes = await axios.get(`${API_BASE}/api/profiles`, { headers: getAuthHeader() });
       const currentUser = profilesRes.data.find(u => u.email === userEmail);
       if (!currentUser) { navigate("/login"); return; }
       setUser(currentUser);
 
-      // 2. جلب جميع الأطباء
       const allUsers = profilesRes.data;
       const medecinsData = allUsers.filter(u => u.role === "MEDECIN").map(m => ({
         userId: m.userId,
@@ -59,7 +55,6 @@ const PatientDashboard = () => {
       }));
       setMedecins(medecinsData);
 
-      // 3. جلب مواعيد المريض
       const rdvsRes = await axios.get(`${API_BASE}/api/rendezvous`, { headers: getAuthHeader() });
       const myRdvs = rdvsRes.data
         .filter(rdv => rdv.patientId === currentUser.userId)
@@ -78,7 +73,6 @@ const PatientDashboard = () => {
         .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
       setAppointments(myRdvs);
 
-      // 4. جلب استشارات المريض
       const consRes = await axios.get(`${API_BASE}/api/consultations`, { headers: getAuthHeader() });
       const myCons = consRes.data
         .filter(cons => cons.patientId === currentUser.userId)
@@ -98,7 +92,6 @@ const PatientDashboard = () => {
         .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
       setConsultations(myCons);
 
-      // 5. جلب فواتير المريض
       const invRes = await axios.get(`${API_BASE}/api/factures`, { headers: getAuthHeader() });
       const myInvoices = invRes.data
         .filter(inv => inv.patientId === currentUser.userId)
@@ -126,7 +119,6 @@ const PatientDashboard = () => {
     loadAllData();
   }, []);
 
-  // Ajouter un rendez-vous
   const handleAddAppointment = async (e) => {
     e.preventDefault();
     if (!newAppointment.medecinId || !newAppointment.dateTime) {
@@ -146,7 +138,7 @@ const PatientDashboard = () => {
         headers: getAuthHeader(),
         'Content-Type': 'application/json'
       });
-      alert("Rendez-vous demandé avec succès ✅");
+      alert("✅ Demande de rendez-vous envoyée, en attente de confirmation");
       setShowAddAppointmentModal(false);
       setNewAppointment({ medecinId: "", dateTime: "", motif: "" });
       loadAllData();
@@ -158,16 +150,30 @@ const PatientDashboard = () => {
     }
   };
 
-  // Annuler un rendez-vous
   const handleCancelAppointment = async (id) => {
     if (window.confirm("Voulez-vous vraiment annuler ce rendez-vous ?")) {
       try {
         await axios.delete(`${API_BASE}/api/rendezvous/${id}`, { headers: getAuthHeader() });
-        alert("Rendez-vous annulé ✅");
+        alert("✅ Rendez-vous annulé");
         loadAllData();
       } catch (err) {
         alert("Erreur lors de l'annulation");
       }
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case "CONFIRME":
+        return <span className="badge green">✅ Confirmé</span>;
+      case "EN_ATTENTE":
+        return <span className="badge yellow">⏳ En attente</span>;
+      case "TERMINE":
+        return <span className="badge blue">✔️ Terminé</span>;
+      case "ANNULE":
+        return <span className="badge red">❌ Annulé</span>;
+      default:
+        return <span className="badge">{status}</span>;
     }
   };
 
@@ -260,13 +266,9 @@ const PatientDashboard = () => {
                         <tr key={rdv.id}>
                           <td>{new Date(rdv.dateTime).toLocaleString()}</td>
                           <td>{rdv.medecinNom}</td>
+                          <td>{getStatusBadge(rdv.status)}</td>
                           <td>
-                            <span className={`badge ${rdv.status === "CONFIRME" ? "green" : "yellow"}`}>
-                              {rdv.status === "CONFIRME" ? "Confirmé" : rdv.status === "EN_ATTENTE" ? "En attente" : rdv.status}
-                            </span>
-                          </td>
-                          <td>
-                            {rdv.status !== "ANNULE" && (
+                            {rdv.status !== "TERMINE" && rdv.status !== "ANNULE" && (
                               <button className="icon-btn delete" onClick={() => handleCancelAppointment(rdv.id)}>
                                 <FaTimesCircle /> Annuler
                               </button>
@@ -323,12 +325,7 @@ const PatientDashboard = () => {
                 <h2>📅 Tous mes rendez-vous</h2>
                 <div className="search-bar">
                   <FaSearch />
-                  <input 
-                    type="text" 
-                    placeholder="Rechercher par médecin ou statut..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
+                  <input type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <button className="btn-add" onClick={() => setShowAddAppointmentModal(true)}>
                   <FaPlus /> Prendre rendez-vous
@@ -351,13 +348,9 @@ const PatientDashboard = () => {
                         <td>{new Date(rdv.dateTime).toLocaleString()}</td>
                         <td>{rdv.medecinNom}</td>
                         <td>{rdv.motif || "—"}</td>
+                        <td>{getStatusBadge(rdv.status)}</td>
                         <td>
-                          <span className={`badge ${rdv.status === "CONFIRME" ? "green" : "yellow"}`}>
-                            {rdv.status === "CONFIRME" ? "Confirmé" : rdv.status === "EN_ATTENTE" ? "En attente" : rdv.status}
-                          </span>
-                        </td>
-                        <td>
-                          {rdv.status !== "ANNULE" && rdv.status !== "TERMINE" && (
+                          {rdv.status !== "TERMINE" && rdv.status !== "ANNULE" && (
                             <button className="icon-btn delete" onClick={() => handleCancelAppointment(rdv.id)}>
                               <FaTimesCircle /> Annuler
                             </button>
@@ -383,12 +376,7 @@ const PatientDashboard = () => {
                 <h2>🩺 Historique des consultations</h2>
                 <div className="search-bar">
                   <FaSearch />
-                  <input 
-                    type="text" 
-                    placeholder="Rechercher par médecin ou diagnostic..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
+                  <input type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
               </div>
               <div className="table-responsive">
@@ -428,12 +416,7 @@ const PatientDashboard = () => {
                 <h2>💰 Mes factures</h2>
                 <div className="search-bar">
                   <FaSearch />
-                  <input 
-                    type="text" 
-                    placeholder="Rechercher par statut..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
+                  <input type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
               </div>
               <div className="table-responsive">
@@ -447,18 +430,22 @@ const PatientDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInvoices.map(inv => (
-                      <tr key={inv.id}>
-                        <td>{new Date(inv.date).toLocaleDateString()}</td>
-                        <td>{inv.montant} DH</td>
-                        <td>
-                          <span className={`badge ${inv.statut === "PAYEE" ? "green" : "red"}`}>
-                            {inv.statut === "PAYEE" ? "Payée" : "Impayée"}
-                          </span>
-                        </td>
-                        <td>{inv.description || "—"}</td>
-                      </tr>
-                    ))}
+                    {filteredInvoices.map(inv => {
+                      let statutClass = "badge red";
+                      let statutText = "❌ Impayée";
+                      if (inv.statut === "PAYEE") {
+                        statutClass = "badge green";
+                        statutText = "✅ Payée";
+                      }
+                      return (
+                        <tr key={inv.id}>
+                          <td>{new Date(inv.date).toLocaleDateString()}</td>
+                          <td>{inv.montant} DH</td>
+                          <td><span className={statutClass}>{statutText}</span></td>
+                          <td>{inv.description || "—"}</td>
+                        </tr>
+                      );
+                    })}
                     {filteredInvoices.length === 0 && (
                       <tr>
                         <td colSpan="4" style={{textAlign:"center"}}>Aucune facture trouvée</td>
@@ -477,7 +464,7 @@ const PatientDashboard = () => {
         </div>
       </main>
 
-      {/* MODAL AJOUTER RENDEZ-VOUS */}
+      {/* MODAL PRENDRE RENDEZ-VOUS */}
       {showAddAppointmentModal && (
         <div className="modal-overlay" onClick={() => setShowAddAppointmentModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -487,29 +474,12 @@ const PatientDashboard = () => {
             </div>
             <form onSubmit={handleAddAppointment}>
               <div className="form-grid">
-                <select 
-                  required 
-                  onChange={e => setNewAppointment({...newAppointment, medecinId: e.target.value})}
-                  value={newAppointment.medecinId}
-                >
+                <select required onChange={e => setNewAppointment({...newAppointment, medecinId: e.target.value})}>
                   <option value="">Sélectionner un médecin</option>
-                  {medecins.map(m => (
-                    <option key={m.userId} value={m.userId}>{m.fullName}</option>
-                  ))}
+                  {medecins.map(m => <option key={m.userId} value={m.userId}>{m.fullName}</option>)}
                 </select>
-                <input 
-                  type="datetime-local" 
-                  required 
-                  onChange={e => setNewAppointment({...newAppointment, dateTime: e.target.value})}
-                  value={newAppointment.dateTime}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Motif (optionnel)" 
-                  onChange={e => setNewAppointment({...newAppointment, motif: e.target.value})}
-                  value={newAppointment.motif}
-                  style={{ gridColumn: "span 2" }}
-                />
+                <input type="datetime-local" required onChange={e => setNewAppointment({...newAppointment, dateTime: e.target.value})} />
+                <input type="text" placeholder="Motif (optionnel)" onChange={e => setNewAppointment({...newAppointment, motif: e.target.value})} style={{ gridColumn: "span 2" }} />
               </div>
               <button type="submit" className="save-changes-btn" disabled={submitting}>
                 {submitting ? "Envoi en cours..." : "Demander le rendez-vous"}
