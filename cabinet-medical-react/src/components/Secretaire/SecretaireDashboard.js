@@ -24,7 +24,7 @@ const SecretaireDashboard = () => {
   const [medecins, setMedecins] = useState([]);
   const [waitingList, setWaitingList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [recentDocs, setRecentDocs] = useState([]);
+  // تم حذف recentDocs
 
   // États pour les modals
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
@@ -48,13 +48,8 @@ const SecretaireDashboard = () => {
   const [newInvoice, setNewInvoice] = useState({ patientId: "", montant: "", description: "" });
   const [editInvoiceData, setEditInvoiceData] = useState({ montant: "", statut: "" });
 
-  const [searchPatientDoc, setSearchPatientDoc] = useState("");
-  const [patientDocs, setPatientDocs] = useState([]);
-  const [showDocsModal, setShowDocsModal] = useState(false);
-  const [selectedPatientDoc, setSelectedPatientDoc] = useState(null);
-  const [showAddDocModal, setShowAddDocModal] = useState(false);
-  const [newDocType, setNewDocType] = useState("ordonnance");
-  const [newDocContent, setNewDocContent] = useState("");
+  // تم حذف جميع حالات المستندات:
+  // searchPatientDoc, patientDocs, showDocsModal, selectedPatientDoc, showAddDocModal, newDocType, newDocContent
 
   const API_BASE = "http://localhost:8087";
   const getAuthHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -112,11 +107,7 @@ const SecretaireDashboard = () => {
       const stored = localStorage.getItem("salle_attente");
       setWaitingList(stored ? JSON.parse(stored) : []);
 
-      // Charger les documents depuis localStorage
-      const storedDocs = localStorage.getItem("patient_documents");
-      const docs = storedDocs ? JSON.parse(storedDocs) : [];
-      const recentDocsList = docs.slice(-5).reverse();
-      setRecentDocs(recentDocsList);
+      // تم حذف تحميل المستندات من localStorage
 
     } catch (err) {
       console.error(err);
@@ -408,79 +399,9 @@ const SecretaireDashboard = () => {
   };
 
   // ------------------------------------------------------------------
-  // 5. Documents dynamiques (localStorage)
+  // تم حذف جميع وظائف المستندات:
+  // searchDocuments, addDocument, deleteDocument, printDocument
   // ------------------------------------------------------------------
-  const searchDocuments = async () => {
-    if (!searchPatientDoc) return;
-    const patient = patients.find(p =>
-      p.firstName.toLowerCase().includes(searchPatientDoc.toLowerCase()) ||
-      p.lastName.toLowerCase().includes(searchPatientDoc.toLowerCase())
-    );
-    if (!patient) { alert("Patient non trouvé"); return; }
-    setSelectedPatientDoc(patient);
-    const storedDocs = localStorage.getItem("patient_documents");
-    const allDocs = storedDocs ? JSON.parse(storedDocs) : [];
-    const patientDocsList = allDocs.filter(doc => doc.patientId === patient.userId);
-    setPatientDocs(patientDocsList);
-    setShowDocsModal(true);
-  };
-
-  const addDocument = () => {
-    if (!selectedPatientDoc) return;
-    const newDoc = {
-      id: Date.now(),
-      patientId: selectedPatientDoc.userId,
-      patientName: `${selectedPatientDoc.firstName} ${selectedPatientDoc.lastName}`,
-      type: newDocType,
-      content: newDocContent || `Document ${newDocType} généré le ${new Date().toLocaleDateString()}`,
-      date: new Date().toISOString()
-    };
-    const storedDocs = localStorage.getItem("patient_documents");
-    const allDocs = storedDocs ? JSON.parse(storedDocs) : [];
-    allDocs.push(newDoc);
-    localStorage.setItem("patient_documents", JSON.stringify(allDocs));
-    alert("✅ Document ajouté");
-    setShowAddDocModal(false);
-    setNewDocContent("");
-    // Mettre à jour la liste
-    const updatedDocs = allDocs.filter(doc => doc.patientId === selectedPatientDoc.userId);
-    setPatientDocs(updatedDocs);
-    const recentDocsList = allDocs.slice(-5).reverse();
-    setRecentDocs(recentDocsList);
-  };
-
-  const deleteDocument = (docId, patientId) => {
-    if (window.confirm("Supprimer ce document ?")) {
-      const storedDocs = localStorage.getItem("patient_documents");
-      let allDocs = storedDocs ? JSON.parse(storedDocs) : [];
-      allDocs = allDocs.filter(doc => doc.id !== docId);
-      localStorage.setItem("patient_documents", JSON.stringify(allDocs));
-      if (selectedPatientDoc && selectedPatientDoc.userId === patientId) {
-        const updatedDocs = allDocs.filter(doc => doc.patientId === patientId);
-        setPatientDocs(updatedDocs);
-      }
-      const recentDocsList = allDocs.slice(-5).reverse();
-      setRecentDocs(recentDocsList);
-      alert("✅ Document supprimé");
-    }
-  };
-
-  const printDocument = (doc) => {
-    const printWindow = window.open();
-    printWindow.document.write(`
-      <html>
-        <head><title>${doc.type}</title></head>
-        <body>
-          <h1>${doc.type}</h1>
-          <p><strong>Date :</strong> ${new Date(doc.date).toLocaleDateString()}</p>
-          <p><strong>Patient :</strong> ${doc.patientName}</p>
-          <hr/>
-          <p>${doc.content}</p>
-        </body>
-      </html>
-    `);
-    printWindow.print();
-  };
 
   const toggleTheme = () => {
     setDarkMode(!darkMode);
@@ -566,7 +487,7 @@ const SecretaireDashboard = () => {
                         <th>Patient</th>
                         <th>Médecin</th>
                         <th>Statut</th>
-                          <th> Confirmation</th>
+                        <th>Confirmation</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -592,19 +513,20 @@ const SecretaireDashboard = () => {
                                 <FaClock /> Ajouter à l'attente
                               </button>
                             )}
-                           
                           </td>
-                          <td> <button className="icon-btn edit" onClick={() => handleEditAppointment(rdv)}>
+                          <td>
+                            <button className="icon-btn edit" onClick={() => handleEditAppointment(rdv)}>
                               <FaEdit /> 
                             </button>
                             <button className="icon-btn delete" onClick={() => handleDeleteAppointment(rdv.id)}>
                               <FaTrash />
-                            </button></td>
+                            </button>
+                          </td>
                         </tr>
                       ))}
                       {upcomingAppointments === 0 && (
                         <tr>
-                          <td colSpan="5">Aucun rendez-vous programmé</td>
+                          <td colSpan="6">Aucun rendez-vous programmé</td>
                         </tr>
                       )}
                     </tbody>
@@ -612,40 +534,8 @@ const SecretaireDashboard = () => {
                 </div>
               </div>
 
-              {/* Derniers documents */}
-              <div className="recent-section">
-                <div className="section-header">
-                  <h3>📄 Derniers documents</h3>
-                  <button className="btn-link" onClick={() => handleSetActiveTab("documents")}>Voir tous</button>
-                </div>
-                <div className="table-responsive">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Patient</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentDocs.map(doc => (
-                        <tr key={doc.id}>
-                          <td>{doc.patientName}</td>
-                          <td>{doc.type}</td>
-                          <td>{new Date(doc.date).toLocaleDateString()}</td>
-                          <td><button className="icon-btn view" onClick={() => printDocument(doc)}><FaPrint /> Imprimer</button></td>
-                        </tr>
-                      ))}
-                      {recentDocs.length === 0 && (
-                        <tr>
-                          <td colSpan="4">Aucun document récent</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {/* تم حذف قسم Derniers documents */}
+              
             </div>
           )}
 
@@ -729,19 +619,20 @@ const SecretaireDashboard = () => {
                               <FaClock /> Ajouter à l'attente
                             </button>
                           )}
-                          
                         </td>
-                        <td><button className="icon-btn edit" onClick={() => handleEditAppointment(rdv)}>
+                        <td>
+                          <button className="icon-btn edit" onClick={() => handleEditAppointment(rdv)}>
                             <FaEdit />
                           </button>
                           <button className="icon-btn delete" onClick={() => handleDeleteAppointment(rdv.id)}>
                             <FaTrash />
-                          </button></td>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                     {appointments.length === 0 && (
                       <tr>
-                        <td colSpan="5">Aucun rendez-vous trouvé</td>
+                        <td colSpan="6">Aucun rendez-vous trouvé</td>
                       </tr>
                     )}
                   </tbody>
@@ -804,49 +695,7 @@ const SecretaireDashboard = () => {
             </div>
           )}
 
-          {/* DOCUMENTS DYNAMIQUES */}
-          {activeTab === "documents" && (
-            <div className="recent-section">
-              <h2>📄 Documents patients</h2>
-              <div className="search-bar">
-                <input type="text" placeholder="Nom du patient" value={searchPatientDoc} onChange={(e) => setSearchPatientDoc(e.target.value)} />
-                <button onClick={searchDocuments}><FaSearch /> Rechercher</button>
-              </div>
-              {selectedPatientDoc && (
-                <div style={{ marginTop: "1rem" }}>
-                  <p><strong>Patient:</strong> {selectedPatientDoc.firstName} {selectedPatientDoc.lastName}</p>
-                  <button className="btn-add" onClick={() => setShowAddDocModal(true)}><FaPlus /> Nouveau document</button>
-                  {patientDocs.length > 0 && (
-                    <div className="table-responsive" style={{ marginTop: "1rem" }}>
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Type</th>
-                            <th>Date</th>
-                            <th>Contenu</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientDocs.map(doc => (
-                            <tr key={doc.id}>
-                              <td>{doc.type}</td>
-                              <td>{new Date(doc.date).toLocaleDateString()}</td>
-                              <td>{doc.content.substring(0, 50)}...</td>
-                              <td className="action-icons">
-                                <button className="icon-btn view" onClick={() => printDocument(doc)}><FaPrint /> Imprimer</button>
-                                <button className="icon-btn delete" onClick={() => deleteDocument(doc.id, selectedPatientDoc.userId)}><FaTrash /> Supprimer</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* تم حذف علامة التبويب DOCUMENTS DYNAMIQUES */}
 
           {/* PROFIL */}
           {activeTab === "profile" && (
@@ -975,26 +824,8 @@ const SecretaireDashboard = () => {
         </div>
       )}
 
-      {/* MODAL AJOUT DOCUMENT */}
-      {showAddDocModal && (
-        <div className="modal-overlay" onClick={() => setShowAddDocModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>📄 Ajouter un document - {selectedPatientDoc?.firstName} {selectedPatientDoc?.lastName}</h3>
-              <button onClick={() => setShowAddDocModal(false)}><FaTimes /></button>
-            </div>
-            <div className="form-grid">
-              <select value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
-                <option value="ordonnance">Ordonnance</option>
-                <option value="certificat">Certificat médical</option>
-                <option value="compteRendu">Compte rendu</option>
-              </select>
-              <textarea placeholder="Contenu du document..." rows="6" value={newDocContent} onChange={(e) => setNewDocContent(e.target.value)} style={{ gridColumn: "span 2" }} />
-            </div>
-            <button className="save-changes-btn" onClick={addDocument}><FaPlus /> Ajouter</button>
-          </div>
-        </div>
-      )}
+      {/* تم حذف MODAL AJOUT DOCUMENT */}
+
     </div>
   );
 };

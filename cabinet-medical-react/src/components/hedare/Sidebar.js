@@ -34,7 +34,6 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "appointments", label: "Gestion des rendez-vous", icon: <FaCalendarAlt /> },
           { id: "patients", label: "Patients", icon: <FaUsers /> },
           { id: "invoices", label: "Factures", icon: <FaFileInvoice /> },
-         
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
       default: // ADMIN – affiche tous les éléments
@@ -48,7 +47,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
           { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
           { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
-          { id: "documents", label: "Documents", icon: <FaFileAlt /> },
+       
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
     }
