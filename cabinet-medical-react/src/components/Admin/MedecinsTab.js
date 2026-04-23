@@ -44,7 +44,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
         m.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.cni || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+     
         (m.address || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -61,14 +61,14 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                 lastName: medecin.lastName || "",
                 email: medecin.email || "",
                 phone: medecin.phone || "",
-                cni: medecin.cni || "",
+              
                 address: medecin.address || "",
                 password: "",
                 confirmPassword: ""
             });
         } else {
             setIsEditing(false);
-            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", address: "", password: "", confirmPassword: "" });
+            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "", address: "", password: "", confirmPassword: "" });
         }
         setShowModal(true);
     };
@@ -92,7 +92,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                 payload.append("firstName", formData.firstName || "");
                 payload.append("lastName", formData.lastName || "");
                 payload.append("phone", formData.phone || "");
-                payload.append("cni", formData.cni || "");
+             
                 payload.append("address", formData.address || "");
                 payload.append("email", formData.email || "");
                 // N'envoyez pas le mot de passe en modification (non requis)
@@ -147,7 +147,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
             "Nom complet": `${m.firstName} ${m.lastName}`,
             Email: m.email,
             Téléphone: m.phone,
-            CNI: m.cni || "",
+            Phone: m.phone|| "",
             Adresse: m.address || ""
         }));
         const ws = XLSX.utils.json_to_sheet(data);
@@ -166,7 +166,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
             `${m.firstName} ${m.lastName}`,
             m.email,
             m.phone,
-            m.cni || "",
+         
             m.address || ""
         ]);
         doc.autoTable({
@@ -197,7 +197,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                         <tr>
                             <th>Médecin</th>
                             <th>Contact</th>
-                            <th>CNI</th>
+                        
                             <th>Adresse</th>
                             <th>Actions</th>
                         </tr>
@@ -210,7 +210,7 @@ const MedecinsTab = ({ onMedecinsUpdate }) => {
                                     <div><strong>{m.firstName} {m.lastName}</strong></div>
                                 </td>
                                 <td>{m.phone}<br/><small>{m.email}</small></td>
-                                <td>{m.cni || "—"}</td>
+                               
                                 <td>{m.address || "—"}</td>
                                 <td className="action-icons">
                                     <button className="icon-btn view" onClick={() => showDetails(m)}><FaEye /></button>

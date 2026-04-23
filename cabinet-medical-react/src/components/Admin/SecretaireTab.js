@@ -177,7 +177,7 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
             <div className="stats-premium-row">
                 <div className="stat-premium-card"><FaUserSecret /> <span>{stats.total}</span> <label>Total secrétaires</label></div>
                 <div className="stat-premium-card"><FaChartLine /> <span>{stats.newThisMonth}</span> <label>Nouveaux ce mois</label></div>
-                <div className="stat-premium-card"><FaIdCard /> <span>CNI</span> <label>Identifiants</label></div>
+           
             </div>
             <div className="toolbar-premium">
                 <div className="search-premium"><FaSearch /><input type="text" placeholder="Rechercher..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
@@ -193,7 +193,6 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
                         <tr>
                             <th>Secrétaire</th>
                             <th>Contact</th>
-                            <th>CNI</th>
                             <th>Adresse</th>
                             <th>Actions</th>
                         </tr>
@@ -206,7 +205,6 @@ const SecretaireTab = ({ onSecretaireUpdate }) => {
                                     <div><strong>{s.firstName} {s.lastName}</strong></div>
                                 </td>
                                 <td>{s.phone}<br/><small>{s.email}</small></td>
-                                <td>{s.cni || "—"}</td>
                                 <td>{s.address || "—"}</td>
                                 <td className="action-icons">
                                     <button className="icon-btn view" onClick={() => showDetails(s)}><FaEye /></button>

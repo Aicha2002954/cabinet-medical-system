@@ -1,0 +1,41 @@
+/* Styles supplémentaires si nécessaire */
+.filter-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  background: var(--bg-main);
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  border: 1px solid var(--border);
+}
+.filter-group select {
+  background: transparent;
+  border: none;
+  padding: 0.4rem;
+  color: var(--text-primary);
+  outline: none;
+}
+.icon-btn.confirm { color: #10b981; }
+.icon-btn.cancel { color: #f59e0b; }
+.icon-btn.delete { color: #ef4444; }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.4rem 1rem;
+  border-radius: 40px;
+  cursor: pointer;
+}
+.btn-confirm {
+  background: #10b981;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 40px;
+  color: white;
+  cursor: pointer;
+}

@@ -1,169 +1,286 @@
-/* EditProfile.css - Style pour la modification du profil (sans Sidebar/TopHeader) */
+/* ========== PROFILE SHARED STYLES ========== */
+/* يستخدم لكل من UserProfile و EditProfile */
 
-/* ===== SECTION PRINCIPALE ===== */
-.edit-profile-wrapper {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* ===== EN-TÊTE ===== */
-.edit-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-.edit-header .btn-back {
-  background: none;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  color: #2c7da0;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 40px;
-  transition: background 0.2s;
-}
-.edit-header .btn-back:hover {
-  background: var(--hover-bg);
-}
-.edit-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-primary);
+/* === Wrapper === */
+.profile-view-wrapper, .edit-profile-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    animation: fadeIn 0.3s ease;
 }
 
-/* ===== CARTE DU FORMULAIRE ===== */
-.edit-form-card {
-  background: var(--bg-main);
-  border-radius: 2rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-  padding: 2rem;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== AVATAR UPLOAD ===== */
-.avatar-upload-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-.avatar-edit-wrapper {
-  position: relative;
-  display: inline-block;
-}
-.avatar-edit-preview {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #2c7da0;
-}
-.camera-icon-label {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background: #2c7da0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.camera-icon-label:hover {
-  transform: scale(1.05);
-}
-.upload-hint {
-  margin-top: 0.8rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+/* === Header === */
+.profile-view-header, .edit-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
 }
 
-/* ===== GRILLE DU FORMULAIRE ===== */
+.back-btn, .btn-back {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #2c7da0;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.back-btn:hover, .btn-back:hover {
+    background: #f0f2f5;
+    color: #1a5f7a;
+}
+
+.profile-view-header h2, .edit-header h2 {
+    font-size: 1.5rem;
+    color: #2d3e50;
+    margin: 0;
+}
+
+/* === Card === */
+.profile-view-card, .edit-form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* === Avatar (sans photo) === */
+.profile-view-avatar, .avatar-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.default-avatar, .avatar-icon-large {
+    color: #2c7da0;
+    font-size: 100px;
+    margin-bottom: 0.5rem;
+}
+
+.avatar-name {
+    font-size: 1.2rem;
+    color: #2d3e50;
+    margin: 0.5rem 0 0.2rem;
+}
+
+.avatar-role {
+    font-size: 0.85rem;
+    color: #6c757d;
+    background: #f0f2f5;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+}
+
+/* === Informations - Grid === */
+.profile-view-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.8rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s;
+}
+
+.info-row:hover {
+    background: #f0f2f5;
+    transform: translateX(5px);
+}
+
+.info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: 0.5px;
+    min-width: 80px;
+}
+
+.info-value {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d3e50;
+    word-break: break-word;
+}
+
+.role-badge {
+    background: linear-gradient(135deg, #2c7da0, #1f5068);
+    color: white;
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.75rem;
+}
+
+/* === Formulaire (EditProfile) === */
 .form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.2rem;
-  margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
 }
+
 .field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
+
 .field-group.full-width {
-  grid-column: span 2;
+    grid-column: span 2;
 }
+
 .field-group label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2d3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
+
+.field-icon {
+    color: #2c7da0;
+    font-size: 0.85rem;
+}
+
 .field-group input,
 .field-group select {
-  padding: 0.7rem 1rem;
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  background: var(--bg-main);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  transition: 0.2s;
+    padding: 0.8rem 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    background: white;
 }
+
 .field-group input:focus,
 .field-group select:focus {
-  outline: none;
-  border-color: #2c7da0;
-  box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
-}
-.field-group select {
-  cursor: pointer;
+    outline: none;
+    border-color: #2c7da0;
+    box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
 }
 
-/* ===== BOUTON ENREGISTRER ===== */
-.btn-update-profile {
-  width: 100%;
-  background: linear-gradient(135deg, #2c7da0, #1f5068);
-  border: none;
-  color: white;
-  padding: 0.9rem;
-  border-radius: 50px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-update-profile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(44,125,160,0.3);
+.disabled-input {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+    cursor: not-allowed;
 }
 
-/* ===== RESPONSIVE ===== */
+/* === Actions (boutons) === */
+.profile-view-actions, .form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.edit-btn, .btn-update-profile {
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, #1a5f7a 0%, #2c7da0 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+}
+
+.edit-btn:hover, .btn-update-profile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(44,125,160,0.3);
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 0.8rem;
+    background: #f0f2f5;
+    color: #6c757d;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+    background: #e0e0e0;
+    color: #495057;
+}
+
+/* === Loading & Error === */
+.loading-screen, .error-screen {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.1rem;
+}
+.loading-screen { color: #2c7da0; }
+.error-screen { color: #e76f51; }
+
+/* === Responsive === */
 @media (max-width: 768px) {
-  .edit-profile-wrapper {
-    padding: 1rem;
-  }
-  .edit-form-card {
-    padding: 1.5rem;
-  }
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  .field-group.full-width {
-    grid-column: span 1;
-  }
-  .edit-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+    .profile-view-wrapper, .edit-profile-wrapper {
+        padding: 1rem;
+    }
+    .profile-view-card, .edit-form-card {
+        padding: 1.5rem;
+    }
+    .profile-view-info, .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .field-group.full-width {
+        grid-column: span 1;
+    }
+    .info-row {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .info-label {
+        width: auto;
+    }
+    .profile-view-header, .edit-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .profile-view-header h2, .edit-header h2 {
+        font-size: 1.2rem;
+    }
+    .default-avatar, .avatar-icon-large {
+        font-size: 80px;
+    }
+    .form-actions {
+        flex-direction: column;
+    }
+    .btn-cancel, .btn-update-profile {
+        flex: auto;
+    }
 }

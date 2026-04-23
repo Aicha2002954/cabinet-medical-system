@@ -1,6 +1,5 @@
 package org.gym.service_security.entities;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,6 +21,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    
     @Column(nullable = false)
     private String firstName;
 
@@ -34,6 +34,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    // ✅ حقل الصورة الشخصية
+    @Column(columnDefinition = "LONGTEXT")
+    private String profilePhoto;
 
     private boolean active = true;
 
@@ -122,5 +125,12 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    // ✅ Getter و Setter للصورة
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
 
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
+    }
 }

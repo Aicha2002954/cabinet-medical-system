@@ -61,15 +61,14 @@ const PatientsTab = ({ onPatientsUpdate }) => {
                 lastName: patient.lastName || "",
                 email: patient.email || "",
                 phone: patient.phone || "",
-                cni: patient.cni || "",
-                zone: patient.zone || "",
+               
                 address: patient.address || "",
                 password: "",
                 confirmPassword: ""
             });
         } else {
             setIsEditing(false);
-            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "", cni: "", zone: "", address: "", password: "", confirmPassword: "" });
+            setFormData({ userId: "", firstName: "", lastName: "", email: "", phone: "",address: "", password: "", confirmPassword: "" });
         }
         setShowModal(true);
     };
@@ -119,8 +118,7 @@ const PatientsTab = ({ onPatientsUpdate }) => {
             "Nom complet": `${p.firstName} ${p.lastName}`,
             Email: p.email,
             Téléphone: p.phone,
-            CNI: p.cni || "",
-            Zone: p.zone || "",
+            
             Adresse: p.address || ""
         }));
         const ws = XLSX.utils.json_to_sheet(exportData);
@@ -141,8 +139,7 @@ const PatientsTab = ({ onPatientsUpdate }) => {
             `${p.firstName} ${p.lastName}`,
             p.email,
             p.phone,
-            p.cni || "",
-            p.zone || "",
+         
             p.address || ""
         ]);
         doc.autoTable({
@@ -194,7 +191,7 @@ const PatientsTab = ({ onPatientsUpdate }) => {
                                     <div><strong>{p.firstName} {p.lastName}</strong><br/><small>ID: {p.userId}</small></div>
                                 </td>
                                 <td>{p.phone}<br/><small>{p.email}</small></td>
-                                <td>{p.zone || "—"}<br/><small>{p.address || ""}</small></td>
+                                <td><small>{p.address || ""}</small></td>
                                 <td className="action-icons">
                                     <button className="icon-btn view" onClick={() => showDetails(p)}><FaEye /></button>
                                     <button className="icon-btn edit" onClick={() => openModal(p)}><FaEdit /></button>

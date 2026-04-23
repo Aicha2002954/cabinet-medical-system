@@ -1,6 +1,5 @@
 package org.gym.service_security.controllers;
 
-
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.gym.service_security.dto.RefreshTokenRequestDTO;
@@ -23,18 +22,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +40,7 @@ import java.util.stream.Collectors;
 @Tag(name = "Users", description = "API pour la gestion des utilisateurs")
 @RestController
 @RequestMapping("/v1/users")
-@Tag(name = "Users", description = "API pour la gestion des utilisateurs")
+@CrossOrigin(origins = "http://localhost:3000")  
 public class UserController {
 
     private final UserService userService;
@@ -53,7 +50,7 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper; // Injecter ton mapper
+    private final UserMapper userMapper;
 
     public UserController(UserService userService, AuthenticationManager authenticationManager, JwtEncoder jwtEncoder,
                           UserRepository userRepository, RefreshTokenService refreshTokenService,
@@ -68,26 +65,22 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    // --- CREATE USER ---
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserRequestDTO request) {
         UserResponseDTO response = userService.createUser(request);
-
         if (!response.isActive()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // --- GET USER BY ID ---
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // --- GET ALL USERS ---
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers(@AuthenticationPrincipal Jwt jwt) {
@@ -103,26 +96,22 @@ public class UserController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(filteredUsers);
         }
-
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    // --- DELETE USER ---
-   @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETAIRE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETAIRE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("Utilisateur supprimé avec succès");
     }
 
-    // --- ASSIGN ROLE ---
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{userId}/roles")
     public ResponseEntity<UserResponseDTO> assignRoleToUser(@PathVariable Integer userId, @RequestParam String roleName) {
         return ResponseEntity.ok(userService.assignRoleToUser(userId, roleName));
     }
 
-    // --- UPDATE USER STATUS ---
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<UserResponseDTO> updateUserStatus(@PathVariable Integer id, @RequestBody Map<String, Boolean> request) {
@@ -132,29 +121,138 @@ public class UserController {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         user.setActive(active);
         User updatedUser = userRepository.save(user);
-
         UserResponseDTO response = userMapper.Entity_to_DTO(updatedUser);
         return ResponseEntity.ok(response);
     }
+// أضف هذه الدالة في UserController.java
+@PostMapping("/debug-login")
+public ResponseEntity<?> debugLogin(@RequestBody Map<String, String> request) {
+    try {
+        String email = request.get("email");
+        String password = request.get("password");
+        
+        System.out.println("========== DEBUG LOGIN ==========");
+        System.out.println("Email reçu: " + email);
+        System.out.println("Password reçu: " + password);
+        
+        User user = userRepository.findByEmail(email).orElse(null);
+        
+        if (user == null) {
+            System.out.println("❌ Utilisateur NON trouvé!");
+            return ResponseEntity.status(401).body(Map.of("error", "Utilisateur non trouvé"));
+        }
+        
+        System.out.println("✅ Utilisateur trouvé: " + user.getEmail());
+        System.out.println("Password stocké: " + user.getPassword());
+        
+        boolean matches = passwordEncoder.matches(password, user.getPassword());
+        System.out.println("Password match: " + matches);
+        
+        if (!matches) {
+            return ResponseEntity.status(401).body(Map.of("error", "Mot de passe incorrect"));
+        }
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "email", user.getEmail(),
+            "firstName", user.getFirstName(),
+            "lastName", user.getLastName(),
+            "profilePhoto", user.getProfilePhoto() != null ? "oui" : "non"
+        ));
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+    }
+}
+// ========== API PUBLIQUES (لا تحتاج توثيق) ==========
 
-    // --- REGISTER CLIENT ---
+@GetMapping("/public/medecins")
+public ResponseEntity<List<UserResponseDTO>> getPublicMedecins() {
+    try {
+        List<User> medecins = userRepository.findAll().stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equals("MEDECIN")))
+                .collect(Collectors.toList());
+        
+        List<UserResponseDTO> response = medecins.stream()
+                .map(userMapper::Entity_to_DTO)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
+@GetMapping("/public/patients")
+public ResponseEntity<List<UserResponseDTO>> getPublicPatients() {
+    try {
+        List<User> patients = userRepository.findAll().stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equals("PATIENT")))
+                .collect(Collectors.toList());
+        
+        List<UserResponseDTO> response = patients.stream()
+                .map(userMapper::Entity_to_DTO)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUserClient(@Valid @RequestBody UserRequestDTO request) {
-        request.setRole(Set.of("CLIENT"));
-        UserResponseDTO response = userService.createUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            request.setRole(Set.of("PATIENT"));
+            
+            User user = new User();
+            user.setFirstName(request.getFirstName());
+            user.setLastName(request.getLastName());
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setActive(true);
+            user.setCreatedAt(LocalDateTime.now());
+            
+            if (request.getProfilePhoto() != null && !request.getProfilePhoto().isEmpty()) {
+                user.setProfilePhoto(request.getProfilePhoto());
+            }
+            
+            Role role = roleRepository.findByName("PATIENT").orElse(null);
+            if (role == null) {
+                role = new Role();
+                role.setName("PATIENT");
+                role = roleRepository.save(role);
+            }
+            user.getRoles().add(role);
+            
+            User savedUser = userRepository.save(user);
+            UserResponseDTO response = userMapper.Entity_to_DTO(savedUser);
+            response.setProfilePhoto(savedUser.getProfilePhoto());
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
-    // --- LOGIN ---
     @PostMapping("/login")
     public ResponseEntity<UserResponseDTO> login(@RequestBody UserRequestDTO request) {
         try {
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
-
-            User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
             Set<String> roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
             Set<String> permissions = user.getRoles().stream()
@@ -194,15 +292,15 @@ public class UserController {
             response.setRefreshToken(refreshToken.getToken());
             response.setTokenType("Bearer");
             response.setTokenExpiresIn(3600);
+            response.setProfilePhoto(user.getProfilePhoto());
 
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
-    // --- REFRESH TOKEN ---
     @PostMapping("/refresh")
     public ResponseEntity<UserResponseDTO> refresh(@RequestBody RefreshTokenRequestDTO request) {
         try {
@@ -248,15 +346,14 @@ public class UserController {
             response.setRefreshToken(newRefreshToken.getToken());
             response.setTokenType("Bearer");
             response.setTokenExpiresIn(3600);
+            response.setProfilePhoto(user.getProfilePhoto());
 
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
-    // --- LOGOUT ---
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody RefreshTokenRequestDTO request) {
@@ -268,7 +365,6 @@ public class UserController {
         }
     }
 
-    // --- LOGOUT ALL ---
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/logout-all")
     public ResponseEntity<String> logoutAll(@RequestParam String email) {
@@ -287,13 +383,10 @@ public class UserController {
         return ResponseEntity.ok("Welcome to Admin Dashboard");
     }
 
-    // --- UPDATE USER ---
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Integer id, @RequestBody UserRequestDTO request) {
-        // هاد الدالة خاصك تزيديها فـ UserService
         UserResponseDTO response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);
     }
-
 }

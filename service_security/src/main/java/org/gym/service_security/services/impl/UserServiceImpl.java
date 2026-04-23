@@ -15,10 +15,11 @@ import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import org.gym.service_security.entities.User;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -142,4 +143,20 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         return userMapper.Entity_to_DTO(savedUser);
     }
+    // أضف هاتين الدالتين في ملف UserServiceImpl.java
+@Override
+public List<User> getAllMedecins() {
+    return userRepository.findAll().stream()
+            .filter(user -> user.getRoles().stream()
+                    .anyMatch(role -> role.getName().equals("MEDECIN")))
+            .collect(Collectors.toList());
+}
+
+@Override
+public List<User> getAllPatients() {
+    return userRepository.findAll().stream()
+            .filter(user -> user.getRoles().stream()
+                    .anyMatch(role -> role.getName().equals("PATIENT")))
+            .collect(Collectors.toList());
+}
 }

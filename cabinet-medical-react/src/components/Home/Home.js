@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Home.css';
 import {
   FaStethoscope, FaCalendarCheck, FaUserMd, FaFileInvoice,
-  FaStar, FaQuoteLeft, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn
+  FaStar, FaQuoteLeft, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn,
+  FaUserCircle, FaHeartbeat, FaBaby, FaHeart, FaLungs, FaBrain
 } from 'react-icons/fa';
 
-// استيراد صور الأطباء والمرضى من مجلد assets (تأكدي من وجودها)
-import doctor1 from '../../assets/doctor1.jpg';
-import doctor2 from '../../assets/doctor2.jpg';
-import doctor3 from '../../assets/doctor3.jpg';
-import doctor4 from '../../assets/doctor4.jpg';
-import patient1 from '../../assets/patient1.jpg';
-import patient2 from '../../assets/patient2.jpg';
-import patient3 from '../../assets/patient3.jpg';
-
-// صور السلايدر (ضعي صورك في مجلد assets بنفس الأسماء)
+// صور السلايدر
 import slide1 from '../../assets/slide1.jpg';
 import slide2 from '../../assets/slide2.jpg';
 import slide3 from '../../assets/slide3.jpg';
 
 const Home = () => {
   const navigate = useNavigate();
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // قائمة صور السلايدر
   const slides = [slide1, slide2, slide3];
@@ -35,24 +30,77 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  // الانتقال إلى صورة معينة عند الضغط على النقطة
   const goToSlide = (index) => {
     setCurrentIndex(index);
   };
 
-  // قائمة الأطباء
-  const doctors = [
-    { id: 1, name: "Dr. Ahmed Benali", specialty: "Médecin généraliste", bio: "Plus de 15 ans d'expérience en médecine générale.", image: doctor1 },
-    { id: 2, name: "Dr. Fatima Zahra", specialty: "Pédiatre", bio: "Diplômée de la faculté de médecine de Casablanca.", image: doctor2 },
-    { id: 3, name: "Dr. Karim El Mansouri", specialty: "Cardiologue", bio: "Expert en maladies cardiovasculaires.", image: doctor3 },
-    { id: 4, name: "Dr. Leila Bennis", specialty: "Dermatologue", bio: "Soins de la peau et esthétique médicale.", image: doctor4 }
-  ];
+  // جلب المرضى من قاعدة البيانات (role = PATIENT)
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:8087/v1/users', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        
+        // تصفية المرضى فقط (role = PATIENT)
+        const allUsers = response.data;
+        const patientsList = allUsers.filter(user => 
+          user.roles && user.roles.includes('PATIENT')
+        );
+        
+        // أخذ أول 6 مرضى مع تحويل البيانات إلى الشكل المطلوب
+        const formattedPatients = patientsList.slice(0, 6).map((patient, index) => ({
+          id: patient.id,
+          name: `${patient.firstName} ${patient.lastName}`,
+          role: "Patient",
+          comment: getRandomComment(patient.firstName),
+          rating: 5,
+          initial: `${patient.firstName?.charAt(0)}${patient.lastName?.charAt(0)}`
+        }));
+        
+        setPatients(formattedPatients);
+      } catch (error) {
+        console.error("Erreur chargement patients:", error);
+        // بيانات تجريبية إذا فشل الاتصال
+        setPatients([
+          { id: 1, name: "Karim Benjelloun", role: "Patient", comment: "Excellent service médical. Je recommande vivement.", rating: 5, initial: "KB" },
+          { id: 2, name: "Nadia Fassi", role: "Patiente", comment: "Professionnalisme et écoute. Très satisfaite.", rating: 5, initial: "NF" },
+          { id: 3, name: "Mohamed El Alami", role: "Patient", comment: "Cabinet moderne et bien équipé.", rating: 5, initial: "MA" },
+          { id: 4, name: "Sanae Tazi", role: "Patiente", comment: "Soins de qualité, je reviendrai.", rating: 5, initial: "ST" },
+          { id: 5, name: "Youssef Lamrani", role: "Patient", comment: "Délais d'attente raisonnables.", rating: 4, initial: "YL" },
+          { id: 6, name: "Fatima Zahra", role: "Patiente", comment: "Médecin à l'écoute et humain.", rating: 5, initial: "FZ" }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // شهادات المرضى
-  const testimonials = [
-    { id: 1, name: "Samira L.", role: "Patiente", comment: "Excellente prise en charge !", rating: 5, image: patient1 },
-    { id: 2, name: "Mohamed R.", role: "Patient", comment: "Service rapide et efficace.", rating: 5, image: patient2 },
-    { id: 3, name: "Fatima E.", role: "Patiente", comment: "Je recommande vivement.", rating: 5, image: patient3 }
+    fetchPatients();
+  }, []);
+
+  // دالة لإنشاء تعليق عشوائي للمريض
+  const getRandomComment = (firstName) => {
+    const comments = [
+      `Je suis très satisfait des soins reçus au cabinet MediCare. Dr. Benali est un médecin à l'écoute et professionnel.`,
+      `Service excellent ! Prise de rendez-vous facile et rapide. Je recommande ce cabinet à tous mes proches.`,
+      `Un grand merci à toute l'équipe pour leur dévouement et leur gentillesse.`,
+      `Cabinet médical moderne avec des équipements de dernière génération. Très bonne expérience.`,
+      `Dr. Fatima Zahra est une pédiatre exceptionnelle. Ma fille est entre de bonnes mains.`,
+      `Consultation au top ! Le diagnostic était précis et le traitement efficace.`,
+      `Je suis suivie régulièrement par Dr. Benali. Un médecin qui prend le temps d'expliquer.`
+    ];
+    return comments[Math.floor(Math.random() * comments.length)];
+  };
+
+  // ========== قائمة الأطباء (بدون صور - بطاقات جميلة) ==========
+  const doctors = [
+    { id: 1, name: "Dr. Ahmed Benali", specialty: "Médecin généraliste", bio: "Plus de 15 ans d'expérience en médecine générale. Consultation pour adultes et enfants.", icon: <FaUserMd /> },
+    { id: 2, name: "Dr. Fatima Zahra", specialty: "Pédiatre", bio: "Diplômée de la faculté de médecine de Casablanca. Spécialiste en santé infantile.", icon: <FaBaby /> },
+    { id: 3, name: "Dr. Karim El Mansouri", specialty: "Cardiologue", bio: "Expert en maladies cardiovasculaires. Dépistage et suivi cardiaque.", icon: <FaHeartbeat /> },
+    { id: 4, name: "Dr. Leila Bennis", specialty: "Dermatologue", bio: "Soins de la peau et esthétique médicale. Traitement de l'acné, eczéma, etc.", icon: <FaHeart /> },
+    { id: 5, name: "Dr. Youssef Chafik", specialty: "Pneumologue", bio: "Spécialiste des maladies respiratoires. Asthme, bronchite, allergies.", icon: <FaLungs /> },
+    { id: 6, name: "Dr. Amal Touzani", specialty: "Neurologue", bio: "Expertise en troubles neurologiques. Migraines, épilepsie, Alzheimer.", icon: <FaBrain /> }
   ];
 
   return (
@@ -92,7 +140,6 @@ const Home = () => {
             <button onClick={() => navigate('/login')} className="btn-outline">Espace patient</button>
           </div>
         </div>
-        {/* Points indicateurs (dots) */}
         <div className="slider-dots">
           {slides.map((_, idx) => (
             <span
@@ -104,21 +151,21 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ========== NOS MÉDECINS ========== */}
+      {/* ========== NOS MÉDECINS (Version sans photos - Cartes élégantes) ========== */}
       <section className="doctors-section" id="doctors">
         <div className="container">
           <h2 className="section-title">👨‍⚕️ Nos médecins experts</h2>
           <p className="section-subtitle">Une équipe dévouée à votre santé</p>
           <div className="doctors-grid">
             {doctors.map(doctor => (
-              <div className="doctor-card" key={doctor.id}>
-                <div className="doctor-image">
-                  <img src={doctor.image} alt={doctor.name} />
+              <div className="doctor-card-no-image" key={doctor.id}>
+                <div className="doctor-icon-circle">
+                  {doctor.icon}
                 </div>
                 <h3>{doctor.name}</h3>
                 <p className="doctor-specialty">{doctor.specialty}</p>
                 <p className="doctor-bio">{doctor.bio}</p>
-                <button className="btn-appointment" onClick={() => navigate('/signup')}>Prendre rendez-vous</button>
+              
               </div>
             ))}
           </div>
@@ -155,34 +202,41 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ========== TÉMOIGNAGES ========== */}
+      {/* ========== TÉMOIGNAGES DES PATIENTS (من قاعدة البيانات) ========== */}
       <section className="testimonials-section">
         <div className="container">
           <h2 className="section-title">💬 Ce que disent nos patients</h2>
-          <p className="section-subtitle">Ils nous ont fait confiance</p>
-          <div className="testimonials-grid">
-            {testimonials.map(t => (
-              <div className="testimonial-card" key={t.id}>
-                <FaQuoteLeft className="quote-icon" />
-                <p className="testimonial-text">"{t.comment}"</p>
-                <div className="testimonial-author">
-                  <img src={t.image} alt={t.name} />
-                  <div>
-                    <h4>{t.name}</h4>
-                    <span>{t.role}</span>
-                    <div className="rating">
-                      {[...Array(t.rating)].map((_, i) => <FaStar key={i} />)}
+          <p className="section-subtitle">Des centaines de patients nous font confiance</p>
+          
+          {loading ? (
+            <div className="loading-spinner">Chargement des avis...</div>
+          ) : (
+            <div className="testimonials-grid">
+              {patients.map(patient => (
+                <div className="testimonial-card" key={patient.id}>
+                  <FaQuoteLeft className="quote-icon" />
+                  <p className="testimonial-text">"{patient.comment}"</p>
+                  <div className="testimonial-author">
+                    <div className="avatar-placeholder">
+                      {patient.initial}
+                    </div>
+                    <div>
+                      <h4>{patient.name}</h4>
+                      <span>{patient.role}</span>
+                      <div className="rating">
+                        {[...Array(patient.rating)].map((_, i) => <FaStar key={i} />)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* ========== FOOTER ========== */}
-      <footer className="footer">
+      <footer className="footer" id="contact">
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col">

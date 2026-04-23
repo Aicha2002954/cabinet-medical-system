@@ -22,8 +22,8 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
       case "MEDECIN":
         return [
           { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
           { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
-      
           { id: "documents", label: "Documents médicaux", icon: <FaFileAlt /> },
           { id: "appointments", label: "Mes rendez-vous", icon: <FaCalendarAlt /> },
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
@@ -31,6 +31,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
       case "SECRETAIRE":
         return [
           { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
+          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
           { id: "appointments", label: "Gestion des rendez-vous", icon: <FaCalendarAlt /> },
           { id: "patients", label: "Patients", icon: <FaUsers /> },
           { id: "invoices", label: "Factures", icon: <FaFileInvoice /> },
@@ -42,12 +43,11 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
           { id: "patients", label: "Patients", icon: <FaUserMd /> },
           { id: "medecins", label: "Médecins", icon: <FaUserMd /> },
           { id: "secretaires", label: "Secrétaires", icon: <FaUserSecret /> },
-      
+          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
           { id: "rendezvous", label: "Rendez-vous", icon: <FaCalendarAlt /> },
           { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
           { id: "factures", label: "Factures", icon: <FaFileInvoice /> },
           { id: "users", label: "Utilisateurs", icon: <FaUsers /> },
-       
           { id: "profile", label: "Mon profil", icon: <FaUserCircle /> }
         ];
     }
@@ -63,7 +63,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
     <aside className="sidebar-modern">
       <div className="sidebar-header">
         <div className="logo-modern">
-         <FaStethoscope className="logo-icon" />
+          <FaStethoscope className="logo-icon" />
           <span>MediCare</span>
         </div>
         <div className="logo-badge">

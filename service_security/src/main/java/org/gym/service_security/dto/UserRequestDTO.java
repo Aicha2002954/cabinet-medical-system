@@ -1,12 +1,11 @@
 package org.gym.service_security.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.util.Set;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter @Setter
@@ -17,7 +16,7 @@ public class UserRequestDTO {
     private String password;
     private String telephone;
     private Set<String> role;
-
+    private String profilePhoto;  // ✅ أضف هذا الحقل للصورة (Base64)
 
     public String getEmail() {
         return email;
@@ -59,6 +58,12 @@ public class UserRequestDTO {
         this.role = role;
     }
 
+    // ✅ Getter et Setter pour profilePhoto
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
 
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
+    }
 }
-

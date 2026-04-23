@@ -61,17 +61,7 @@ const UserProfile = ({ onEdit }) => {
             </div>
 
             <div className="profile-view-card">
-                <div className="profile-view-avatar">
-                    {userData.profileImageUrl ? (
-                        <img
-                            src={`${IMAGE_BASE_URL}/${userData.profileImageUrl}`}
-                            alt="avatar"
-                            className="avatar-preview"
-                        />
-                    ) : (
-                        <FaUserCircle size={100} className="default-avatar" />
-                    )}
-                </div>
+                
 
                 <div className="profile-view-info">
                     <div className="info-row">
@@ -86,14 +76,7 @@ const UserProfile = ({ onEdit }) => {
                         <div className="info-label">Téléphone</div>
                         <div className="info-value">{userData.phone || "Non renseigné"}</div>
                     </div>
-                    <div className="info-row">
-                        <div className="info-label">CIN</div>
-                        <div className="info-value">{userData.cin || "Non renseigné"}</div>
-                    </div>
-                    <div className="info-row">
-                        <div className="info-label">Zone</div>
-                        <div className="info-value">{userData.zone || "Non renseignée"}</div>
-                    </div>
+                   
                     <div className="info-row">
                         <div className="info-label">Adresse</div>
                         <div className="info-value">{userData.address || "Non renseignée"}</div>

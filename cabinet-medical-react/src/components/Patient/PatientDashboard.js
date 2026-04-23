@@ -36,83 +36,93 @@ const PatientDashboard = () => {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) { navigate("/login"); return; }
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const userEmail = payload.email || payload.sub;
-      
-      const profilesRes = await axios.get(`${API_BASE}/api/profiles`, { headers: getAuthHeader() });
-      const currentUser = profilesRes.data.find(u => u.email === userEmail);
-      if (!currentUser) { navigate("/login"); return; }
-      setUser(currentUser);
+        const token = localStorage.getItem("token");
+        if (!token) { navigate("/login"); return; }
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const userEmail = payload.email || payload.sub;
+        
+        const profilesRes = await axios.get(`${API_BASE}/api/profiles`, { headers: getAuthHeader() });
+        const currentUser = profilesRes.data.find(u => u.email === userEmail);
+        if (!currentUser) { navigate("/login"); return; }
+        
+        // ✅ إنشاء نسخة من المستخدم بدون الصورة
+        const userWithoutPhoto = {
+            userId: currentUser.userId,
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName,
+            email: currentUser.email,
+            role: currentUser.role,
+            active: currentUser.active
+            // ✅ لا نضيف profilePhoto
+        };
+        setUser(userWithoutPhoto);
 
-      const allUsers = profilesRes.data;
-      const medecinsData = allUsers.filter(u => u.role === "MEDECIN").map(m => ({
-        userId: m.userId,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        fullName: `Dr. ${m.firstName} ${m.lastName}`
-      }));
-      setMedecins(medecinsData);
-
-      const rdvsRes = await axios.get(`${API_BASE}/api/rendezvous`, { headers: getAuthHeader() });
-      const myRdvs = rdvsRes.data
-        .filter(rdv => rdv.patientId === currentUser.userId)
-        .map(rdv => {
-          const medecin = medecinsData.find(m => m.userId === rdv.medecinId);
-          return {
-            id: rdv.id,
-            patientId: rdv.patientId,
-            medecinId: rdv.medecinId,
-            medecinNom: medecin ? medecin.fullName : `Dr. ${rdv.medecinId}`,
-            dateTime: rdv.dateTime,
-            status: rdv.status || "EN_ATTENTE",
-            motif: rdv.reason || rdv.motif || ""
-          };
-        })
-        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-      setAppointments(myRdvs);
-
-      const consRes = await axios.get(`${API_BASE}/api/consultations`, { headers: getAuthHeader() });
-      const myCons = consRes.data
-        .filter(cons => cons.patientId === currentUser.userId)
-        .map(cons => {
-          const medecin = medecinsData.find(m => m.userId === cons.medecinId);
-          return {
-            id: cons.id,
-            patientId: cons.patientId,
-            medecinId: cons.medecinId,
-            medecinNom: medecin ? medecin.fullName : `Dr. ${cons.medecinId}`,
-            dateTime: cons.consultationDate || cons.dateTime,
-            diagnostic: cons.diagnostic || "—",
-            prescription: cons.prescription || "—",
-            notes: cons.notes || ""
-          };
-        })
-        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-      setConsultations(myCons);
-
-      const invRes = await axios.get(`${API_BASE}/api/factures`, { headers: getAuthHeader() });
-      const myInvoices = invRes.data
-        .filter(inv => inv.patientId === currentUser.userId)
-        .map(inv => ({
-          id: inv.id,
-          patientId: inv.patientId,
-          montant: inv.montant,
-          date: inv.dateFacture || inv.date,
-          statut: inv.statut || (inv.paye ? "PAYEE" : "IMPAYEE"),
-          description: inv.description || ""
+        const allUsers = profilesRes.data;
+        const medecinsData = allUsers.filter(u => u.role === "MEDECIN").map(m => ({
+            userId: m.userId,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            fullName: `Dr. ${m.firstName} ${m.lastName}`
         }));
-      setInvoices(myInvoices);
+        setMedecins(medecinsData);
+
+        const rdvsRes = await axios.get(`${API_BASE}/api/rendezvous`, { headers: getAuthHeader() });
+        const myRdvs = rdvsRes.data
+            .filter(rdv => rdv.patientId === currentUser.userId)
+            .map(rdv => {
+                const medecin = medecinsData.find(m => m.userId === rdv.medecinId);
+                return {
+                    id: rdv.id,
+                    patientId: rdv.patientId,
+                    medecinId: rdv.medecinId,
+                    medecinNom: medecin ? medecin.fullName : `Dr. ${rdv.medecinId}`,
+                    dateTime: rdv.dateTime,
+                    status: rdv.status || "EN_ATTENTE",
+                    motif: rdv.reason || rdv.motif || ""
+                };
+            })
+            .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        setAppointments(myRdvs);
+
+        const consRes = await axios.get(`${API_BASE}/api/consultations`, { headers: getAuthHeader() });
+        const myCons = consRes.data
+            .filter(cons => cons.patientId === currentUser.userId)
+            .map(cons => {
+                const medecin = medecinsData.find(m => m.userId === cons.medecinId);
+                return {
+                    id: cons.id,
+                    patientId: cons.patientId,
+                    medecinId: cons.medecinId,
+                    medecinNom: medecin ? medecin.fullName : `Dr. ${cons.medecinId}`,
+                    dateTime: cons.consultationDate || cons.dateTime,
+                    diagnostic: cons.diagnostic || "—",
+                    prescription: cons.prescription || "—",
+                    notes: cons.notes || ""
+                };
+            })
+            .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+        setConsultations(myCons);
+
+        const invRes = await axios.get(`${API_BASE}/api/factures`, { headers: getAuthHeader() });
+        const myInvoices = invRes.data
+            .filter(inv => inv.patientId === currentUser.userId)
+            .map(inv => ({
+                id: inv.id,
+                patientId: inv.patientId,
+                montant: inv.montant,
+                date: inv.dateFacture || inv.date,
+                statut: inv.statut || (inv.paye ? "PAYEE" : "IMPAYEE"),
+                description: inv.description || ""
+            }));
+        setInvoices(myInvoices);
 
     } catch (err) {
-      console.error("Erreur chargement:", err);
-      alert("Erreur lors du chargement des données");
+        console.error("Erreur chargement:", err);
+        alert("Erreur lors du chargement des données");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
-
+};
   useEffect(() => {
     if (hasLoaded.current) return;
     hasLoaded.current = true;

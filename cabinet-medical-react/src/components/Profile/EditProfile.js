@@ -83,7 +83,7 @@ const EditProfile = ({ onCancel, onSuccess }) => {
         formDataToSend.append("firstName", formData.firstName || "");
         formDataToSend.append("lastName", formData.lastName || "");
         formDataToSend.append("phone", formData.phone || "");
-        formDataToSend.append("zone", formData.zone || "");
+       
         formDataToSend.append("address", formData.address || "");
         if (selectedFile) {
             formDataToSend.append("file", selectedFile);
@@ -113,37 +113,7 @@ const EditProfile = ({ onCancel, onSuccess }) => {
             </div>
 
             <form className="edit-form-card" onSubmit={handleSave}>
-                <div className="avatar-upload-container">
-                    <div className="avatar-edit-wrapper">
-                        {previewUrl ? (
-                            <img
-                                src={previewUrl}
-                                className="avatar-edit-preview"
-                                alt="Preview"
-                                style={{
-                                    width: '130px',
-                                    height: '130px',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: '3px solid #d5e5e5'
-                                }}
-                            />
-                        ) : (
-                            <FaUserCircle size={130} color="#ccc" />
-                        )}
-                        <label htmlFor="file-upload" className="camera-icon-label">
-                            <FaCamera />
-                            <input
-                                id="file-upload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                style={{ display: 'none' }}
-                            />
-                        </label>
-                    </div>
-                    <p className="upload-hint">Cliquez sur l'icône pour changer la photo</p>
-                </div>
+              
 
                 <div className="form-grid">
                     <div className="field-group">
@@ -158,15 +128,7 @@ const EditProfile = ({ onCancel, onSuccess }) => {
                         <label>Téléphone</label>
                         <input name="phone" value={formData.phone || ''} onChange={handleChange} />
                     </div>
-                    <div className="field-group">
-                        <label>Zone</label>
-                        <select name="zone" value={formData.zone || ''} onChange={handleChange}>
-                            <option value="">Sélectionner...</option>
-                            <option value="Centre">Centre</option>
-                            <option value="Nord">Nord</option>
-                            <option value="Sud">Sud</option>
-                        </select>
-                    </div>
+                    
                     <div className="field-group full-width">
                         <label>Adresse</label>
                         <input name="address" value={formData.address || ''} onChange={handleChange} />

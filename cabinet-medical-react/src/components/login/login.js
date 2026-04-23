@@ -16,18 +16,85 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        
         try {
             const res = await api.post("/v1/users/login", { email, password });
-            const { accessToken } = res.data;
+            
+            console.log("========== RÉPONSE COMPLÈTE ==========");
+            console.log("Status:", res.status);
+            console.log("Data:", res.data);
+            console.log("======================================");
+            
+            const { accessToken, refreshToken, profilePhoto, firstName, lastName, email: userEmail, id } = res.data;
+            
+            if (!accessToken) {
+                throw new Error("Pas de token reçu");
+            }
+            
+            // حفظ التوكن
             localStorage.setItem("token", accessToken);
-            const payload = JSON.parse(atob(accessToken.split(".")[1]));
-            const userRoles = payload.roles || payload.authorities || [];
-            if (userRoles.includes("ADMIN")) navigate("/admin");
-            else if (userRoles.includes("MEDECIN")) navigate("/medecin");
-            else if (userRoles.includes("SECRETAIRE")) navigate("/secretaire");
-            else navigate("/patient");
+            localStorage.setItem("refreshToken", refreshToken);
+            
+            // ✅ استخراج الدور من التوكن
+            let userRoles = [];
+            try {
+                const payload = JSON.parse(atob(accessToken.split(".")[1]));
+                console.log("========== PAYLOAD DU TOKEN ==========");
+                console.log("Payload complet:", payload);
+                console.log("Roles:", payload.roles);
+                console.log("======================================");
+                
+                userRoles = payload.roles || payload.authorities || [];
+                
+                if (typeof userRoles === "string") {
+                    userRoles = [userRoles];
+                }
+                
+                console.log("✅ Rôles extraits:", userRoles);
+                
+            } catch (err) {
+                console.error("❌ Erreur décodage token:", err);
+            }
+            
+            // ✅ حفظ معلومات المستخدم بدون الصورة (لتجنب مشكلة الصورة الكبيرة)
+            localStorage.setItem("user", JSON.stringify({
+                id, 
+                firstName, 
+                lastName, 
+                email: userEmail, 
+                roles: userRoles
+                // ❌ لا نحفظ profilePhoto هنا
+            }));
+            
+            console.log("✅ Utilisateur sauvegardé (sans photo)");
+            
+            // ✅ التوجيه حسب الدور
+            console.log("🎯 Redirection basée sur les rôles:", userRoles);
+            
+            if (userRoles.includes("ADMIN")) {
+                console.log("➡️ Redirection vers /admin");
+                navigate("/admin");
+            }
+            else if (userRoles.includes("MEDECIN")) {
+                console.log("➡️ Redirection vers /medecin");
+                navigate("/medecin");
+            }
+            else if (userRoles.includes("SECRETAIRE")) {
+                console.log("➡️ Redirection vers /secretaire");
+                navigate("/secretaire");
+            }
+            else if (userRoles.includes("PATIENT")) {
+                console.log("➡️ Redirection vers /patient");
+                navigate("/patient");
+            }
+            else {
+                console.log("⚠️ Aucun rôle trouvé, redirection par défaut vers /patient");
+                navigate("/patient");
+            }
+            
         } catch (err) {
-            console.error(err);
+            console.error("❌ Erreur login:", err);
+            console.error("❌ Response:", err.response?.data);
             setError("Email ou mot de passe incorrect");
         } finally {
             setLoading(false);
@@ -36,7 +103,6 @@ const Login = () => {
 
     return (
         <div className="login-container">
-            {/* Navbar médicale avec lien inscription */}
             <nav className="navbar">
                 <div className="nav-container">
                     <div className="logo-area">
@@ -47,14 +113,11 @@ const Login = () => {
                         <a href="/">Accueil</a>
                         <a href="#services">Services</a>
                         <a href="#contact">Contact</a>
-                        <button onClick={() => navigate("/signup")} className="signup-nav-btn">
-                            Inscription
-                        </button>
+                        <button onClick={() => navigate("/signup")} className="signup-nav-btn">Inscription</button>
                     </div>
                 </div>
             </nav>
 
-            {/* Formulaire uniquement, centré */}
             <div className="login-wrapper-solo">
                 <div className="login-card-solo">
                     <div className="login-form-solo">
@@ -64,23 +127,23 @@ const Login = () => {
                         <form onSubmit={handleLogin}>
                             <div className="input-group">
                                 <FaUser className="icon" />
-                                <input
-                                    type="email"
-                                    placeholder="Email professionnel"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
+                                <input 
+                                    type="email" 
+                                    placeholder="Email professionnel" 
+                                    value={email} 
+                                    onChange={(e) => setEmail(e.target.value)} 
+                                    required 
                                 />
                             </div>
 
                             <div className="input-group">
                                 <FaLock className="icon" />
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Mot de passe"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
+                                <input 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder="Mot de passe" 
+                                    value={password} 
+                                    onChange={(e) => setPassword(e.target.value)} 
+                                    required 
                                 />
                                 <button
                                     type="button"
@@ -91,7 +154,7 @@ const Login = () => {
                                 </button>
                             </div>
 
-                            {error && <div className="error-message">{error}</div>}
+                            {error && <div className="error-message" style={{color: "red", margin: "10px 0", textAlign: "center"}}>{error}</div>}
 
                             <button type="submit" className="login-btn" disabled={loading}>
                                 {loading ? "Connexion..." : "Se connecter"}
@@ -99,14 +162,10 @@ const Login = () => {
 
                             <div className="signup-link">
                                 <p>Pas encore de compte ?</p>
-                                <button onClick={() => navigate("/signup")} className="signup-link-btn">
-                                    Créer un compte
-                                </button>
+                                <button onClick={() => navigate("/signup")} className="signup-link-btn">Créer un compte</button>
                             </div>
 
-                            <a href="/forgot-password" className="forgot-link">
-                                Mot de passe oublié ?
-                            </a>
+                            <a href="/forgot-password" className="forgot-link">Mot de passe oublié ?</a>
                         </form>
                     </div>
                 </div>

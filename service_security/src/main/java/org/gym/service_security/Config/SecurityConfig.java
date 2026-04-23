@@ -15,7 +15,9 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +26,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -38,14 +39,12 @@ public class SecurityConfig {
     private final RsaKeys rsaKeys;
     private final CustomUserDetailsService customUserDetailsService;
 
-
-    public SecurityConfig(
-            RsaKeys rsaKeys,
-            CustomUserDetailsService customUserDetailsService
-    ) {
+    public SecurityConfig(RsaKeys rsaKeys,
+                          CustomUserDetailsService customUserDetailsService) {
         this.rsaKeys = rsaKeys;
         this.customUserDetailsService = customUserDetailsService;
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -60,59 +59,42 @@ public class SecurityConfig {
     }
 
     // ======================= CONFIGURATION CORS =======================
-    // Cette configuration permet d'autoriser le Frontend Angular
-    // (http://localhost:4200) à communiquer avec le backend Spring Boot.
-    // Sans CORS, le navigateur bloque les requêtes pour des raisons de sécurité.
- /*    @Bean
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-
-        // Origine autorisée (Frontend Angular)
         config.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-
-        // Méthodes HTTP autorisées (GET, POST, PUT, DELETE, etc.)
         config.setAllowedMethods(Arrays.asList("*"));
-
-        // Headers autorisés (Authorization est nécessaire pour JWT)
         config.setAllowedHeaders(Arrays.asList("*"));
-
-        // Autoriser l'envoi du header Authorization (JWT)
         config.setAllowCredentials(true);
-
-        // Appliquer cette configuration à toutes les routes de l'application
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
-*/
+
+    // ======================= IGNORER LES CHEMINS PUBLICS =======================
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers(
+                    "/v1/users/public/**",      // ✅ الأطباء والمرضى
+                    "/v1/users/login",
+                    "/v1/users/register",
+                    "/v1/users/refresh",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**"
+                );
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                // Activation de CORS dans Spring Security
-               // .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-
-                .sessionManagement(sess ->
-                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                     .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/v1/users/login").permitAll()
-                        .requestMatchers("/v1/users/refresh").permitAll()
-                        .requestMatchers("/v1/users/register").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-
                         .anyRequest().authenticated()
                 )
-
-                .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(Customizer.withDefaults())
-                )
-
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .build();
     }
 
@@ -121,17 +103,12 @@ public class SecurityConfig {
         JWK jwk = new RSAKey.Builder(rsaKeys.publicKey())
                 .privateKey(rsaKeys.privateKey())
                 .build();
-
-        JWKSource<SecurityContext> jwkSource =
-                new ImmutableJWKSet<>(new JWKSet(jwk));
-
+        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
         return new NimbusJwtEncoder(jwkSource);
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder
-                .withPublicKey(rsaKeys.publicKey())
-                .build();
+        return NimbusJwtDecoder.withPublicKey(rsaKeys.publicKey()).build();
     }
 }

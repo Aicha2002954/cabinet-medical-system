@@ -55,19 +55,12 @@ const TopHeader = ({ activeTab, isMenuOpen, setIsMenuOpen, darkMode, toggleTheme
         <h2>{getTitle()}</h2>
       </div>
       <div className="header-right">
-        <button className="icon-btn-modern">
-          <FaBell />
-          <span className="notification-badge">3</span>
-        </button>
+       
         <button className="icon-btn-modern theme-toggle" onClick={toggleTheme}>
           {darkMode ? <FaSun /> : <FaMoon />}
         </button>
         <div className="user-profile-modern">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="avatar" className="avatar" />
-          ) : (
-            <FaUserCircle className="avatar-icon" style={{ fontSize: "2rem", color: "var(--text-secondary)" }} />
-          )}
+         
           <div className="user-info">
             <span className="user-name">{userName}</span>
             <span className="user-role">{userRole}</span>

@@ -1,13 +1,12 @@
 package org.gym.service_security.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,7 +25,9 @@ public class UserResponseDTO {
     private String refreshToken;
     private String tokenType;
     private Integer tokenExpiresIn;
+    private String profilePhoto;  // ✅ أضف هذا الحقل للصورة
 
+    // Getters et Setters existants...
     public String getAccessToken() {
         return accessToken;
     }
@@ -121,5 +122,14 @@ public class UserResponseDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // ✅ Getter et Setter pour profilePhoto
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 }
