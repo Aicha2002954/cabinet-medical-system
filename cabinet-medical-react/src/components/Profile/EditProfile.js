@@ -83,7 +83,6 @@ const EditProfile = ({ onCancel, onSuccess }) => {
         formDataToSend.append("firstName", formData.firstName || "");
         formDataToSend.append("lastName", formData.lastName || "");
         formDataToSend.append("phone", formData.phone || "");
-       
         formDataToSend.append("address", formData.address || "");
         if (selectedFile) {
             formDataToSend.append("file", selectedFile);
@@ -113,9 +112,18 @@ const EditProfile = ({ onCancel, onSuccess }) => {
             </div>
 
             <form className="edit-form-card" onSubmit={handleSave}>
-              
-
                 <div className="form-grid">
+                    {/* حقل البريد الإلكتروني (غير قابل للتعديل) */}
+                    <div className="field-group full-width">
+                        <label>Email</label>
+                        <input 
+                            name="email" 
+                            value={formData.email || ''} 
+                            disabled 
+                            className="readonly-field"
+                        />
+                    </div>
+
                     <div className="field-group">
                         <label>Prénom</label>
                         <input name="firstName" value={formData.firstName || ''} onChange={handleChange} />

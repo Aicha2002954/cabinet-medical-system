@@ -22,7 +22,7 @@ const Sidebar = ({ activeTab, setActiveTab, role }) => {
       case "MEDECIN":
         return [
           { id: "dashboard", label: "Tableau de bord", icon: <FaTachometerAlt /> },
-          { id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
+         // {// id: "salleAttente", label: "Salle d'attente", icon: <FaChair /> },
           { id: "consultations", label: "Consultations", icon: <FaStethoscope /> },
           { id: "documents", label: "Documents médicaux", icon: <FaFileAlt /> },
           { id: "appointments", label: "Mes rendez-vous", icon: <FaCalendarAlt /> },

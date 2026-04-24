@@ -67,9 +67,7 @@ const Home = () => {
           { id: 1, name: "Karim Benjelloun", role: "Patient", comment: "Excellent service médical. Je recommande vivement.", rating: 5, initial: "KB" },
           { id: 2, name: "Nadia Fassi", role: "Patiente", comment: "Professionnalisme et écoute. Très satisfaite.", rating: 5, initial: "NF" },
           { id: 3, name: "Mohamed El Alami", role: "Patient", comment: "Cabinet moderne et bien équipé.", rating: 5, initial: "MA" },
-          { id: 4, name: "Sanae Tazi", role: "Patiente", comment: "Soins de qualité, je reviendrai.", rating: 5, initial: "ST" },
-          { id: 5, name: "Youssef Lamrani", role: "Patient", comment: "Délais d'attente raisonnables.", rating: 4, initial: "YL" },
-          { id: 6, name: "Fatima Zahra", role: "Patiente", comment: "Médecin à l'écoute et humain.", rating: 5, initial: "FZ" }
+          
         ]);
       } finally {
         setLoading(false);
